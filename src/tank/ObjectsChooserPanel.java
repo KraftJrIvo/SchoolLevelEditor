@@ -33,6 +33,8 @@ import javax.swing.JPanel;
  *
  * @author IVO
  */
+
+//KAKAHA
 public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseMotionListener {
     private int imgColumnsCount = 0;
     private int imgLinesCount = 0;
@@ -203,7 +205,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 }
             }
             dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\tiles");
-            directoryListing = dir.listFiles();;
+            directoryListing = dir.listFiles();
             for (File child : directoryListing) {
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
