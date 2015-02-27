@@ -34,7 +34,7 @@ import javax.swing.JPanel;
  * @author IVO
  */
 
-//KAKAHA
+//SEREGA
 public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseMotionListener {
     private int imgColumnsCount = 0;
     private int imgLinesCount = 0;
