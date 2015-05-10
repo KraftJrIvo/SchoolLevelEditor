@@ -39,6 +39,7 @@ public class GameLevel {
     public int[][] content0 = null;
     public int[][] content1 = null;
     public int[][] content2 = null;
+    public int[][] content3 = null;
     private String backgroundPath = null;
     private Image backgroundImage = null;
     private int tempPlatformDecorationPaletteSize = -1;
@@ -46,7 +47,7 @@ public class GameLevel {
     private ArrayDeque<Platform> platforms = new ArrayDeque<Platform>();
     private ArrayDeque<ImageForPalette> platformPaletteImages = new ArrayDeque<ImageForPalette>();
     ImageForPalette[] platformPaletteImageArray = null;
-    public int worldWidth = 0, worldHeight = 0, coordX = 0, coordY = 0;
+    public int worldWidth = 0, worldHeight = 0, coordX = 0, coordY = 0, coordZ = 0;
     public int nextLevelX = 0, nextLevelY = 0;
 
     public static class ImageForPalette {
@@ -131,9 +132,10 @@ public class GameLevel {
         worldHeight = height;
     }
 
-    public void setAreaCoords(int width, int height) {
+    public void setAreaCoords(int width, int height, int z) {
         coordX = width;
         coordY = height;
+        coordZ = z;
     }
 
 
@@ -172,12 +174,14 @@ public class GameLevel {
         content0  = new int[getWidth()][getHeight()];
         content1  = new int[getWidth()][getHeight()];
         content2  = new int[getWidth()][getHeight()];
+        content3  = new int[getWidth()][getHeight()];
         int x, y;
         for (y=0; y<getHeight(); ++y){
             for (x=0; x<getWidth(); ++x){
                 content0[x][y] = -1;
                 content1[x][y] = -1;
                 content2[x][y] = -1;
+                content3[x][y] = -1;
             }
         }
         changed = false;
@@ -198,12 +202,14 @@ public class GameLevel {
             content0  = new int[getWidth()][getHeight()];
             content1  = new int[getWidth()][getHeight()];
             content2  = new int[getWidth()][getHeight()];
+            content3  = new int[getWidth()][getHeight()];
             int x, y;
             for (y=0; y<getHeight(); ++y){
                 for (x=0; x<getWidth(); ++x){
                     content0[x][y] = -1;
                     content1[x][y] = -1;
                     content2[x][y] = -1;
+                    content3[x][y] = -1;
                 }
             }
             changed = false;
@@ -235,8 +241,10 @@ public class GameLevel {
             return content0[x][y];
         } else if (layer == 1) {
             return content1[x][y];
-        } else {
+        } else if (layer == 2) {
             return content2[x][y];
+        } else {
+            return content3[x][y];
         }
     }
 
@@ -246,10 +254,23 @@ public class GameLevel {
 
         if (layer == 0) {
             content0[x][y] = item;
+            if (content1[x][y] == -1) {
+                if (item == -1) {
+                    content3[x][y] = -1;
+                }
+                else content3[x][y] = 1;
+            }
         } else if (layer == 1) {
             content1[x][y] = item;
-        } else {
+            if (item == -1) {
+                if (content0[x][y] == -1)content3[x][y] = -1;
+                else content3[x][y] = 1;
+            }
+            else content3[x][y] = 2;
+        } else if (layer == 2) {
             content2[x][y] = item;
+        } else {
+            content3[x][y] = item;
         }
         changed = true;
     }
@@ -272,10 +293,32 @@ public class GameLevel {
 
         try {
             RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
-            fos.skipBytes((int)fos.length()-1);
-            fos.write(coordX);
-            fos.write(coordY);
-            int x, y;
+            //fos.skipBytes((int)fos.length()-1);
+            int size = fos.read();
+            fos.skipBytes(size + 9);
+            int x=999, y=999, z=999;
+            boolean found = false;
+            long read = size + 10;
+            do {
+                if (read >= fos.length()) break;
+                x = fos.read();
+                y = fos.read();
+                z = fos.read();
+                if (x != coordX || y != coordY || z != coordZ) {
+                    read += 3;
+                    fos.skipBytes(width*height*4);
+                    read += width*height*4;
+                } else {
+                    found = true;
+                    break;
+                }
+            } while (read < fos.length());
+
+            if (!found) {
+                fos.write(coordX);
+                fos.write(coordY);
+                fos.write(coordZ);
+            }
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
                     fos.write(content0[x][y]);
@@ -291,7 +334,12 @@ public class GameLevel {
                     fos.write(content2[x][y]);
                 }
             }
-            fos.write(254);
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    fos.write(content3[x][y]);
+                }
+            }
+            //fos.write(254);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -335,6 +383,7 @@ public class GameLevel {
             fos.write(playerHeight);
             fos.write(coordX);
             fos.write(coordY);
+            fos.write(coordZ);
             int x, y;
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
@@ -351,7 +400,12 @@ public class GameLevel {
                     fos.write(content2[x][y]);
                 }
             }
-            fos.write(254);
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    fos.write(content3[x][y]);
+                }
+            }
+            //fos.write(254);
             //zos.closeEntry();
         } catch (IOException ex) {
             Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
@@ -475,7 +529,7 @@ public class GameLevel {
             return false;
         }
         try {
-            boolean ret = loadFromInputStream(fis);
+            boolean ret = loadFromInputStream(fis, file.length());
             fis.close();
             if (ret) {
                 backgroundImage = ObjectsChooserPanel.getImageFromZipFile(zip, "background", true);
@@ -512,47 +566,6 @@ public class GameLevel {
         return false;
     }
 
-/*    private int getPlatformDecorationPaletteSize(File file) {
-        InputStream fis = null;
-        ZipFile zip = null;
-        ZipEntry ze = null;
-        try {
-            zip = new ZipFile(file);
-        } catch (ZipException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            ze = zip.getEntry("Content.tlv");
-            fis = zip.getInputStream(ze);
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (fis == null) {
-            try {
-                zip.close();
-            } catch (IOException ex) {
-                Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return -1;
-        }
-        try {
-            boolean ret = loadFromInputStream(fis);
-            fis.close();
-            if (!ret) return -1;
-            return tempPlatformDecorationPaletteSize;
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            fis.close();
-            zip.close();
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return -1;
-    }*/
 
     private boolean loadTLW(File file) {
         FileInputStream fInput = null;
@@ -565,7 +578,7 @@ public class GameLevel {
             return true;
         }
         try {
-            if (loadFromInputStream(fInput)) {
+            if (loadFromInputStream(fInput, file.length())) {
                 fInput.close();
                 return true;
             }
@@ -576,7 +589,7 @@ public class GameLevel {
         return false;
     }
 
-    private boolean loadFromInputStream(InputStream fInput) throws IOException {
+    private boolean loadFromInputStream(InputStream fInput, long length) throws IOException {
         tempPlatformDecorationPaletteSize = -1;
         platforms.clear();
         String str;
@@ -596,49 +609,90 @@ public class GameLevel {
         tileHeight = fInput.read();
         playerWidth = fInput.read();
         playerHeight = fInput.read();
-        coordX = fInput.read();
-        coordY = fInput.read();
-        int endChecker = 0;
-        while ((coordX != nextLevelX || coordY != nextLevelY)) {
-            fInput.skip(width*height*3);
-            endChecker = fInput.read();
-            if (endChecker == 254) {
-                return false;
+
+        int x=999, y=999, z=999;
+        boolean found = false;
+        long read = 10+name.length();
+        do {
+            if (read >= length) break;
+            x = fInput.read();
+            y = fInput.read();
+            z = fInput.read();
+            if (x != coordX || y != coordY || z != coordZ) {
+                read += 3;
+                fInput.skip(width*height*4);
+                read += width*height*4;
             } else {
-                coordX = endChecker;
+                found = true;
+                break;
             }
-            //coordX = fInput.read();
-            coordY = fInput.read();
-        }
-        content0 = new int[width][height];
-        content1 = new int[width][height];
-        content2 = new int[width][height];
-        changed = false;
-        int x;
-        int y;
-        int sym;
-        for (y = 0; y < height; ++y) {
-            for (x = 0; x < width; ++x) {
-                sym = fInput.read();
-                if (sym == 255) content0[x][y] = -1;
-                else content0[x][y] = sym;
+        } while (read < length);
+
+        if (found) {
+            if (x == 999) {
+                coordX = fInput.read();
+            } else {
+                coordX = x;
             }
-        }
-        for (y = 0; y < height; ++y) {
-            for (x = 0; x < width; ++x) {
-                sym = fInput.read();
-                if (sym == 255) content1[x][y] = -1;
-                else content1[x][y] = sym;
+            if (y == 999) {
+                coordY = fInput.read();
+            } else {
+                coordY = y;
             }
-        }
-        for (y = 0; y < height; ++y) {
-            for (x = 0; x < width; ++x) {
-                sym = fInput.read();
-                if (sym == 255) content2[x][y] = -1;
-                else content2[x][y] = sym;
+            if (z == 999) {
+                coordZ = fInput.read();
+            } else {
+                coordZ = z;
             }
+            /*int endChecker = 0;
+            while ((coordX != nextLevelX || coordY != nextLevelY)) {
+                fInput.skip(width*height*4);
+                endChecker = fInput.read();
+                if (endChecker == 254) {
+                    return false;
+                } else {
+                    coordX = endChecker;
+                }
+                //coordX = fInput.read();
+                coordY = fInput.read();
+            }*/
+            content0 = new int[width][height];
+            content1 = new int[width][height];
+            content2 = new int[width][height];
+            content3 = new int[width][height];
+            changed = false;
+            int sym;
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    sym = fInput.read();
+                    if (sym == 255) content0[x][y] = -1;
+                    else content0[x][y] = sym;
+                }
+            }
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    sym = fInput.read();
+                    if (sym == 255) content1[x][y] = -1;
+                    else content1[x][y] = sym;
+                }
+            }
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    sym = fInput.read();
+                    if (sym == 255) content2[x][y] = -1;
+                    else content2[x][y] = sym;
+                }
+            }
+            for (y = 0; y < height; ++y) {
+                for (x = 0; x < width; ++x) {
+                    sym = fInput.read();
+                    if (sym == 255) content3[x][y] = -1;
+                    else content3[x][y] = sym;
+                }
+            }
+            return true;
         }
-        return true;
+        return false;
     }
 
     public void setBackground(String name) {
@@ -711,7 +765,6 @@ public class GameLevel {
             }
         }
         if (parent instanceof EditorLevelPanel) {
-            ((EditorLevelPanel)parent).invalidatePlatforms();
             ((EditorLevelPanel)parent).repaint();
         }
     }

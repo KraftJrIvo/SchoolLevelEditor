@@ -5,38 +5,21 @@
 
 package tank;
 
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Paint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.Transparency;
-import java.awt.event.ActionEvent;
+
+import java.awt.*;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.font.FontRenderContext;
-import java.awt.font.TextLayout;
-import java.awt.geom.AffineTransform;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Iterator;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
+
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import tank.GameLevel.Platform;
 import tank.Grid.Point;
 import tank.ObjectsChooserPanel.Rect;
 
@@ -50,6 +33,7 @@ public class EditorLevelPanel extends JPanel
     BufferedImage gameLevelBufferedImage0 = null;
     BufferedImage gameLevelBufferedImage1 = null;
     BufferedImage gameLevelBufferedImage2 = null;
+    BufferedImage gameLevelBufferedImage3 = null;
     BufferedImage platformsBufferedImage = null;
     BufferedImage topBufferedImage = null;
     public GameLevel gameLevel =  new GameLevel(this);
@@ -57,36 +41,23 @@ public class EditorLevelPanel extends JPanel
     private int selectedColumn = -1;
     private int mouseButton;
     private Grid grid = new Grid();
-    private Image platformStartImage = null;
-    private Image platformFinishImage = null;
-    private int platformKeyRadius;
     private boolean gridIsVisible = true;
     private boolean backgroundIsVisible = true;
-    private GameLevel.Platform tempPlatform = new GameLevel.Platform();
-    private boolean platformCreation = false;
     private int mouseX;
     private int mouseY;
     private Point[][] platformKeys = null;
-    private Color[] platformColors = new Color[8];
     private java.awt.Frame parentFrame;
     int currentLayer = 1;
 
     public void  setObjectsChooserPanel(ObjectsChooserPanel panel) {
-        panel.setOnChooser(new ObjectsChooserPanel.ChooserListener() {
-            public void onChoose(int i) {
-                cancelPlatformCreation();
-            }
-        });
         gameLevel.setObjectsChooserPanel(panel);
     }
 
-    private int getOffset(int layer) {
+    private int getOffset(int layer, int texHeight) {
         if (layer == 0) {
-            return grid.getCellRect(0, 0).height()/4;
-        } else if (layer == 1) {
-            return 0;
+            return texHeight - grid.getCellRect(0, 0).height();
         } else {
-            return -grid.getCellRect(0, 0).height();
+            return 0;
         }
     }
 
@@ -100,7 +71,6 @@ public class EditorLevelPanel extends JPanel
 
     public void loadLevel(String fileName) {
         gameLevel.load(fileName);
-        cancelPlatformCreation();
         gridSizeChanged();
 /*        if (gameLevel.getBackground() != null) {
             backgroundImage = ObjectsChooserPanel.getImageAtPath(this, gameLevel.getBackground());
@@ -121,152 +91,13 @@ public class EditorLevelPanel extends JPanel
     private void gridSizeChanged() {
         grid.setSize(gameLevel.getWidth(), gameLevel.getHeight(), getWidth(), getHeight());
         grid.setCellSize(gameLevel.tileWidth, gameLevel.tileHeight, getWidth(), getHeight());
-        newPlatformKeys(gameLevel.getWidth(), gameLevel.getHeight());
-        setPlatformKeys();
-        platformKeyRadius = grid.getApproximatelyCellScreenSize()/6;
+
     }
 
-    private void drawPlatformKey(Graphics2D g2, int col, int row) {
-        if (col < 0 || col >= grid.getWidth() || row < 0 || row >= grid.getHeight()) return;
-        int currentKey = platformKeys[col][row].x;
-        if (currentKey == Platform.PLATFORM_START) {
-            drawImage(g2, platformStartImage, col, row);
-        } else if (currentKey == Platform.PLATFORM_KEY) {
-            //drawImage(g2, platformKeyImage, col, row);
-            Point pos;
-            pos = grid.getCellCenter(col, row);
-            int circleSize = platformKeyRadius*2;
-            g2.fillOval(pos.x-platformKeyRadius, pos.y-platformKeyRadius, circleSize, circleSize);
-        } else if (currentKey == Platform.PLATFORM_FINISH) {
-            drawImage(g2, platformFinishImage, col, row);
-        }
-    }
-
-    private void invalidatePlatformCreation() {
-        platformCreation = false;
-        setPlatformKeys();
-        invalidateGameLevel();
-        invalidateTop();
-        repaint();
-    }
-
-    private void newPlatformKeys(int width, int height) {
-        platformKeys = new Point[width][height];
-        int x, y;
-        for (x = 0; x < width; ++x) {
-            for (y = 0; y < height; ++y) {
-                platformKeys[x][y] = new Point();
-            }
-        }
-    }
-
-    private void clearPlatformKeys(int width, int height) {
-        int x, y;
-        for (y = 0; y < height; ++y) {
-            for (x = 0; x < width; ++x) {
-                platformKeys[x][y].x = 0;
-                platformKeys[x][y].y = 0;
-            }
-        }
-    }
-
-    private void setPlatformKeys() {
-        if (tempPlatform.posArray == null && gameLevel.getPlatformCount() == 0) return;
-        clearPlatformKeys(grid.getWidth(), grid.getHeight());
-        Platform currentPlatform;
-        int ix = 0;
-        Iterator<Platform> platformIterator = gameLevel.getPlatformIterator();
-        while (platformIterator.hasNext()) {
-            currentPlatform = platformIterator.next();
-            if (currentPlatform.posArray == null) continue;
-            setPlatformKeys(currentPlatform, ix);
-            ix++;
-        }
-        if (platformCreation) setPlatformKeys(tempPlatform, ix);
-    }
-
-    private void setPlatformKeys(Platform platform, int ix) {
-        if (platform.posArray == null) return;
-        Iterator<Point> pointIterator;
-        Point pos;
-        int currentKey = 0;
-        pointIterator = platform.posArray.iterator();
-        while (pointIterator.hasNext()) {
-            pos = pointIterator.next();
-            if (currentKey == 0) currentKey = Platform.PLATFORM_START;
-            else if(currentKey == Platform.PLATFORM_START) {
-                if (!pointIterator.hasNext())
-                    currentKey = Platform.PLATFORM_FINISH;
-                else
-                    currentKey = Platform.PLATFORM_KEY;
-            }
-            else if(!pointIterator.hasNext()) currentKey = Platform.PLATFORM_FINISH;
-            if (platformKeys[pos.x][pos.y].x == Platform.PLATFORM_START) continue;
-            setPlatformKey (pos.x, pos.y, currentKey, ix);
-        }
-    }
-
-    private int getCurrentTempPlatformKey() {
-        if (tempPlatform.posArray == null) return 0;
-        if (tempPlatform.posArray.size() == 1) return Platform.PLATFORM_START;
-        return Platform.PLATFORM_KEY;
-    }
-
-    private void setPlatformKey(int x, int y, int key, int ix) {
-        if (key == 0) return;
-        if (x < 0 || x >= grid.getWidth() || y < 0 || y >= grid.getHeight()) return;
-        if (platformKeys[x][y].x == Platform.PLATFORM_START) return;
-        if ((platformKeys[x][y].x == 0)
-                || (platformKeys[x][y].x == Platform.PLATFORM_KEY
-                && key != Platform.PLATFORM_KEY)
-                || (platformKeys[x][y].x == Platform.PLATFORM_FINISH
-                && key == Platform.PLATFORM_START))
-            platformKeys[x][y].x = key;
-            platformKeys[x][y].y = ix;
-    }
-
-    private void drawPlatform(Graphics g) {
-        Point centerPoint = grid.getCell(mouseX, mouseY);
-        if (centerPoint.x < 0 || centerPoint.y < 0) return;
-        Point leftPoint = new Point();
-        Point rightPoint = new Point();
-        if ((tempPlatform.getSize() % 2) == 0) {
-            leftPoint.x = centerPoint.x - (tempPlatform.getSize() / 2 - 1);
-        } else {
-            leftPoint.x = centerPoint.x - tempPlatform.getSize() / 2;
-        }
-        leftPoint.y = rightPoint.y = centerPoint.y;
-        rightPoint.x = Math.min(grid.getWidth() - 1, leftPoint.x + tempPlatform.getSize() - 1);
-        leftPoint.x = Math.max(0, leftPoint.x);
-        Rect leftCellRect = grid.getCellRect(leftPoint.x, leftPoint.y);
-        Rect rightCellRect = grid.getCellRect(rightPoint.x, rightPoint.y);
-        if (leftCellRect != null && rightCellRect != null) {
-            g.setColor(Color.black);
-            g.fillRect(leftCellRect.left, leftCellRect.top,
-                    rightCellRect.right - leftCellRect.left, leftCellRect.height());
-        }
-    }
-
-
-    private void drawPlatformSymbol(Graphics g) {
-        if (tempPlatform == null) return;
-        Point centerPoint = grid.getCell(mouseX, mouseY);
-        if (centerPoint.x < 0 || centerPoint.y < 0) return;
-        Rect centerCellRect = grid.getCellRect(centerPoint.x, centerPoint.y);
-        if (centerCellRect != null) {
-            if (tempPlatform.posArray == null)
-                g.drawImage(platformStartImage, centerCellRect.left, centerCellRect.top,
-                    centerCellRect.width(), centerCellRect.height(), this);
-            else
-                g.drawImage(platformFinishImage, centerCellRect.left, centerCellRect.top,
-                    centerCellRect.width(), centerCellRect.height(), this);
-        }
-    }
 
     private void invalidateAll() {
         invalidateBackgroud();
         invalidateGameLevel();
-        invalidatePlatforms();
         invalidateTop();
     }
 
@@ -303,7 +134,7 @@ public class EditorLevelPanel extends JPanel
         //int height = grid.getLineY(row+1)-grid.getLineY(row);
         Rect cellRect = grid.getCellRect(col, row);
         int imageTrueHeight = cellRect.width() * (height/width);
-        g2.drawImage(image, grid.getLineX(col), grid.getLineY(row)+cellRect.height()-imageTrueHeight+offsetY, cellRect.width(), imageTrueHeight,  this);
+        g2.drawImage(image, grid.getLineX(col), grid.getLineY(row) + cellRect.height() - imageTrueHeight + offsetY, cellRect.width(), imageTrueHeight, this);
     }
 
     private boolean fillCell(int x, int y, int item) {
@@ -314,53 +145,9 @@ public class EditorLevelPanel extends JPanel
         int oldValue = gameLevel.getCell(selectedColumn, selectedRow, currentLayer);
         gameLevel.setCell(selectedColumn, selectedRow, currentLayer, item);
 
-        // repaint cell
-        /*if (oldValue == item) return true;
-
-        Rect cellRect = grid.getCellRect(cell.x, cell.y);
-        if (cellRect == null) return false;
-        Graphics2D g2;
-        int offseY = getOffset(currentLayer);
-        if (currentLayer == 0) {
-            g2 = gameLevelBufferedImage0.createGraphics();
-        } else if (currentLayer == 1) {
-            g2 = gameLevelBufferedImage1.createGraphics();
-        } else {
-            g2 = gameLevelBufferedImage2.createGraphics();
-        }
-        if (oldValue > -1) {
-            g2.setBackground(new Color(0x00000000, true));
-            g2.clearRect(cellRect.left, 0, cellRect.width(), cellRect.height()*getLevelHeight());
-        }
-        //int intm;
-        for (int i = 0; i < getLevelHeight(); ++i) {
-            if (currentLayer == 0) {
-                item = gameLevel.content0[cell.x][i];
-            } else if (currentLayer == 1) {
-                item = gameLevel.content1[cell.x][i];
-            } else {
-                item = gameLevel.content2[cell.x][i];
-            }
-            cellRect = grid.getCellRect(cell.x, i);
-            if (item != -1) {
-                Image image = gameLevel.getObjectsChooserPanel().getImage(item);
-                ImageObserver io = new ImageObserver() {
-                    @Override
-                    public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
-                        return false;
-                    }
-                };
-                int imageWidth = image.getWidth(io);
-                int imageHeight = image.getHeight(io);
-                int imageTrueHeight = cellRect.width() * (imageHeight / imageWidth);
-                //g2.drawImage(image, cellRect.left, cellRect.bottom - imageTrueHeight+offseY, cellRect.width(), imageTrueHeight, this);
-            }
-        }
-        drawPlatformKey(g2, selectedColumn, selectedRow);*/
         return true;
     }
 
-    @SuppressWarnings("LeakingThisInConstructor")
     public EditorLevelPanel(java.awt.Frame parent) {
         parentFrame = parent;
         addMouseListener(this);
@@ -369,34 +156,6 @@ public class EditorLevelPanel extends JPanel
 
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "pressedEscape");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "pressedEnter");
-
-
-        platformStartImage = ObjectsChooserPanel.getImage(this, "plat_start.png");
-        platformFinishImage = ObjectsChooserPanel.getImage(this, "plat_finish.png");
-
-        platformColors[0] = Color.RED;
-        platformColors[1] = Color.BLUE;
-        platformColors[2] = Color.GREEN;
-        platformColors[3] = Color.ORANGE;
-        platformColors[4] = Color.MAGENTA;
-        platformColors[5] = Color.DARK_GRAY;
-        platformColors[6] = Color.BLACK;
-        platformColors[7] = new Color(0xff990000);
-    }
-
-    public void cancelPlatformCreation() {
-        if (!platformCreation || tempPlatform.posArray == null) return;
-        tempPlatform.posArray.clear();
-        invalidatePlatformCreation();
-    }
-
-    public void applyPlatform() {
-        if (!platformCreation || tempPlatform.posArray == null
-                || tempPlatform.posArray.size() <= 1) return;
-        gameLevel.addPlatform(tempPlatform);
-        tempPlatform = new GameLevel.Platform();
-        invalidatePlatforms();
-        invalidatePlatformCreation();
     }
 
     public int getLevelWidth() {
@@ -426,8 +185,8 @@ public class EditorLevelPanel extends JPanel
         gameLevel.setWorldSize(width, height);
     }
 
-    public void setAreaCoords(int width, int height) {
-        gameLevel.setAreaCoords(width, height);
+    public void setAreaCoords(int width, int height, int z) {
+        gameLevel.setAreaCoords(width, height, z);
     }
 
     public void setLevelValues(int tileWidth, int tileHeight, int playerWidth, int playerHeight, boolean platformMode) {
@@ -503,7 +262,7 @@ public class EditorLevelPanel extends JPanel
     public void drawLayer(Graphics g, ImageObserver io, int n) {
         for (int i = 0; i < getLevelWidth(); ++i) {
             for (int t = 0; t < getLevelHeight(); ++t) {
-                if ((gameLevel.content2[i][t] != -1 && n == 2) || (gameLevel.content1[i][t] != -1 && n == 1) || (gameLevel.content0[i][t] != -1 && n == 0)) {
+                if ((gameLevel.content2[i][t] != -1 && n == 2) || (gameLevel.content1[i][t] != -1 && n == 1) || (gameLevel.content0[i][t] != -1 && n == 0) || (gameLevel.content3[i][t] != -1 && n == 3)) {
                     Rect cell = grid.getCellRect(i, t);
                     int imageIndex = gameLevel.getCell(i, t, n);
                     Image image = gameLevel.getObjectsChooserPanel().getImage(imageIndex);
@@ -518,27 +277,45 @@ public class EditorLevelPanel extends JPanel
                     float test1 = (float)height/(float)width;
                     int imageTrueHeight = (int)(cell.width() * test1);
                     //g.drawImage(image, cell.left, cell.bottom-imageTrueHeight+getOffset(n), cell.width(), imageTrueHeight, io);
-                    if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
-                        g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n), cell.width(), imageTrueHeight, io);
-                    } else {
-                        boolean left = (i > 0 && ((gameLevel.content2[i-1][t] == imageIndex && n == 2) || (gameLevel.content1[i-1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0)));
-                        boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0)));
-                        boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0)));
-                        boolean down = (t < getLevelHeight()-1 && ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0)));
-                        int tileX = getRightTile(left, right, up, down).x;
-                        int tileY = getRightTile(left, right, up, down).y;
-                        if (getTileInverted(left, right, up, down)) {
-                            g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n)+imageTrueHeight,
-                                    width*tileX+width, height*tileY, width*tileX, height*tileY+height, this);
+                    if (n != 3) {
+                        if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
+                            g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.width(), imageTrueHeight, io);
                         } else {
-                            g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n)+imageTrueHeight,
-                                    width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
+                            boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.content3[i-1][t] == imageIndex && n == 3)));
+                            boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.content3[i+1][t] == imageIndex && n == 3)));
+                            boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.content3[i][t-1] == imageIndex && n == 3)));
+                            boolean down = (t < getLevelHeight()-1 && ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.content3[i][t+1] == imageIndex && n == 3)));
+                            int tileX = getRightTile(left, right, up, down).x;
+                            int tileY = getRightTile(left, right, up, down).y;
+                            if (getTileInverted(left, right, up, down)) {
+                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                        width*tileX+width, height*tileY, width*tileX, height*tileY+height, this);
+                            } else {
+                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                        width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
+                            }
                         }
-                }
+                    } else {
+                        g.setColor(new Color(1.0f, 0, 1.0f, 0.25f));
+                        g.setFont(g.getFont().deriveFont(40.0f));
+                        g.drawString(getTileString(gameLevel.content3[i][t]), cell.left, cell.bottom);
+                    }
                 }
             }
         }
+        g.setColor(Color.WHITE);
+    }
 
+    private String getTileString(int i) {
+        switch (i) {
+            case 0: return "!S!";
+            case 1: return "FLR";
+            case 2: return "WAL";
+            case 3: return "SCE";
+            case 4: return "STA";
+            case 5: return "DYN";
+        }
+        return "";
     }
 
     @Override
@@ -551,13 +328,14 @@ public class EditorLevelPanel extends JPanel
             g.fillRect(0, 0, getWidth(), getHeight());
         }
         if (gridIsVisible) drawGrid(g);
-        if (platformCreation) drawPlatform(g);
         if (gameLevelBufferedImage0!=null) g.drawImage(gameLevelBufferedImage0, 0, 0, gameLevelBufferedImage0.getWidth(),
                     gameLevelBufferedImage0.getHeight(), this);
         if (gameLevelBufferedImage1!=null) g.drawImage(gameLevelBufferedImage1, 0, 0, gameLevelBufferedImage1.getWidth(),
                     gameLevelBufferedImage1.getHeight(), this);
         if (gameLevelBufferedImage2!=null) g.drawImage(gameLevelBufferedImage2, 0, 0, gameLevelBufferedImage2.getWidth(),
                     gameLevelBufferedImage2.getHeight(), this);
+        if (gameLevelBufferedImage3!=null) g.drawImage(gameLevelBufferedImage3, 0, 0, gameLevelBufferedImage3.getWidth(),
+                gameLevelBufferedImage3.getHeight(), this);
         ImageObserver io = new ImageObserver() {
             @Override
             public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
@@ -568,60 +346,11 @@ public class EditorLevelPanel extends JPanel
         drawLayer(g, io, 0);
         drawLayer(g, io, 1);
         drawLayer(g, io, 2);
-        if (platformCreation) {
-            if (tempPlatform.posArray != null && tempPlatform.posArray.size()>0) {
-                Point pos, lastPos, currentCell, currentPos;
-                pos = tempPlatform.posArray.getLast();
-                lastPos = grid.getCellCenter(pos.x, pos.y);
-                currentCell = grid.getCell(mouseX, mouseY);
-                if (currentCell.x >= 0 || currentCell.y >= 0) {
-                    currentPos = grid.getCellCenter(currentCell.x, currentCell.y);
-                    if (currentPos != null) {
-                        g.setColor(platformColors[gameLevel.getPlatformCount()%8]);
-                        g.drawLine(currentPos.x, currentPos.y, lastPos.x, lastPos.y);
-                    }
-                }
-            }
-            drawPlatformSymbol(g);
-        }
+        if (currentLayer == 3) drawLayer(g, io, 3);
+
         if (gameLevel.getPlatformCount() > 0)
             g.drawImage(platformsBufferedImage, 0, 0, platformsBufferedImage.getWidth(),
                     platformsBufferedImage.getHeight(), this);
-        if (platformCreation && topBufferedImage != null)
-            g.drawImage(topBufferedImage, 0, 0, topBufferedImage.getWidth(),
-                    topBufferedImage.getHeight(), this);
-        drawPlatformsLines(g);
-    }
-
-    private void drawPlatformsLines(Graphics g) {
-        if (tempPlatform.posArray == null && gameLevel.getPlatformCount() == 0) return;
-        Platform currentPlatform;
-        int currentPlatformIx = 0;
-        Iterator<Platform> platformIterator = gameLevel.getPlatformIterator();
-        while (platformIterator.hasNext()) {
-            currentPlatform = platformIterator.next();
-            g.setColor(platformColors[currentPlatformIx%8]);
-            currentPlatformIx++;
-            drawPlatformLines(g, currentPlatform);
-        }
-        g.setColor(platformColors[currentPlatformIx%8]);
-        if (platformCreation) drawPlatformLines(g, tempPlatform);
-    }
-
-    private void drawPlatformLines(Graphics g, Platform platform) {
-        Point pos, center, prev_center = new Point();
-        if (platform.posArray != null) {
-            Iterator<Point> iterator = platform.posArray.iterator();
-            boolean first = true;
-            while(iterator.hasNext()) {
-                pos = iterator.next();
-                center = grid.getCellCenter(pos.x, pos.y);
-                if (!first) {
-                    g.drawLine(prev_center.x, prev_center.y, center.x, center.y);
-                } else first = false;
-                prev_center = center;
-            }
-        }
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -629,28 +358,7 @@ public class EditorLevelPanel extends JPanel
 
     public void mousePressed(MouseEvent e) {
         mouseButton = e.getButton();
-        if (platformCreation) {
-            Point cellPos = grid.getCell(mouseX, mouseY);
-            if (cellPos.x >= 0 && cellPos.y >= 0) {
-                Point pos;
 
-                if (tempPlatform.posArray == null) tempPlatform.posArray = new ArrayDeque<Point>();
-                Iterator<Point> iterator = tempPlatform.posArray.iterator();
-                while(iterator.hasNext()) {
-                    pos = iterator.next();
-                    if (pos.x == cellPos.x && pos.y == cellPos.y) return;
-                }
-                pos = new Point();
-                pos.x = cellPos.x;
-                pos.y = cellPos.y;
-                tempPlatform.posArray.add(pos);
-                setPlatformKey(pos.x, pos.y, getCurrentTempPlatformKey(), gameLevel.getPlatformCount());
-                invalidateGameLevel();
-                invalidateTop();
-                repaint();
-                return;
-            }
-        }
         mouseEvent(e);
     }
 
@@ -668,7 +376,6 @@ public class EditorLevelPanel extends JPanel
     }
 
     private void mouseEvent(MouseEvent e) {
-        if (platformCreation) return;
         if (mouseButton == MouseEvent.BUTTON1
                 && gameLevel.getObjectsChooserPanel().getSelectedObject() != -1) {
             if (fillCell(e.getX(), e.getY(), gameLevel.getObjectsChooserPanel().getSelectedObject())) {
@@ -682,12 +389,6 @@ public class EditorLevelPanel extends JPanel
     }
 
     public void mouseMoved(MouseEvent e) {
-        if (platformCreation) {
-            mouseX = e.getX();
-            mouseY = e.getY();
-            invalidateTop();
-            repaint();
-        }
     }
 
     public void setBackground(String name) {
@@ -710,14 +411,6 @@ public class EditorLevelPanel extends JPanel
         repaint();
     }
 
-    public void createPlatform(int size, int speed, int delay) {
-        tempPlatform.setSize(size);
-        tempPlatform.movingSpeed = speed;
-        tempPlatform.delay = delay;
-        platformCreation = true;
-        invalidateTop();
-        repaint();
-    }
 
     private boolean checkSizeToChange(BufferedImage image) {
         if (image == null) return true;
@@ -752,8 +445,10 @@ public class EditorLevelPanel extends JPanel
             gameLevelBufferedImage = gameLevelBufferedImage0;
         } else if (currentLayer == 1) {
             gameLevelBufferedImage = gameLevelBufferedImage1;
-        } else {
+        } else if (currentLayer == 2) {
             gameLevelBufferedImage = gameLevelBufferedImage2;
+        } else {
+            gameLevelBufferedImage = gameLevelBufferedImage3;
         }
         if (checkSizeToChange(gameLevelBufferedImage)) {
             gameLevelBufferedImage = getGraphicsConfiguration().createCompatibleImage(
@@ -767,44 +462,13 @@ public class EditorLevelPanel extends JPanel
             gameLevelBufferedImage0 = gameLevelBufferedImage;
         } else if (currentLayer == 1) {
             gameLevelBufferedImage1 = gameLevelBufferedImage;
-        } else {
+        } else if (currentLayer == 2) {
             gameLevelBufferedImage2 = gameLevelBufferedImage;
+        } else {
+            gameLevelBufferedImage3 = gameLevelBufferedImage;
         }
     }
 
-    public void invalidatePlatforms() {
-        if (getWidth() <= 0 || getHeight() <= 0) return;
-        if (checkSizeToChange(platformsBufferedImage)) {
-            platformsBufferedImage = getGraphicsConfiguration().createCompatibleImage(
-                getWidth(), getHeight(), Transparency.TRANSLUCENT
-            );
-        }
-        Graphics2D g2 = setTransparentBack(platformsBufferedImage);
-        Iterator<Platform> platformIterator = gameLevel.getPlatformIterator();
-        Platform currentPlatform;
-        while (platformIterator.hasNext()) {
-            currentPlatform = platformIterator.next();
-            //drawPlatformDecoration(g2, currentPlatform);
-        }
-
-/*        g2.setColor(Color.black);
-        int i, t;
-        int imageIndex;
-        Image image;
-        int currentPlatformIx = 0;
-        for (i=0; i<getLevelHeight(); ++i){
-            for (t=0; t<getLevelWidth(); ++t){
-                g2.setColor(platformColors[platformKeys[t][i].y%8]);
-                imageIndex = gameLevel.getCell(t, i);
-                if (imageIndex >= 0) {
-                    image = gameLevel.getObjectsChooserPanel().getImage(imageIndex);
-                    drawImage(g2, image, t, i);
-                }
-                drawPlatformKey(g2, t, i);
-            }
-            currentPlatformIx++;
-        }*/
-    }
 
     private Graphics2D setTransparentBack(BufferedImage image) {
         Graphics2D g2 = image.createGraphics();
@@ -825,32 +489,6 @@ public class EditorLevelPanel extends JPanel
 
         Graphics2D g2 = setTransparentBack(topBufferedImage);
 
-        if (platformCreation) {
-            // draw caption
-            float fontSize = (float)getWidth() * 0.03f;
-            Font gFont = new Font("Tahoma", Font.BOLD, (int)fontSize);
-            g2.setColor(Color.orange);
-            g2.setFont(gFont);
-            FontRenderContext frc = g2.getFontRenderContext();
-            TextLayout tl;
-            if (tempPlatform.posArray != null && tempPlatform.posArray.size() > 0)
-                tl = new TextLayout("Set next point. (ESC - cancel, ENTER - apply)", g2.getFont(), frc);
-            else
-                tl = new TextLayout("Set start point. (ESC - cancel)", g2.getFont(), frc);
-            float xx = (float)((getWidth()-tl.getBounds().getWidth())/2);
-            Shape shape = tl.getOutline(null);
-            BasicStroke sroke = new BasicStroke(5.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-            g2.setStroke(sroke);
-            AffineTransform Tx = AffineTransform.getTranslateInstance(xx, tl.getAscent()+10);
-            shape = Tx.createTransformedShape(shape);
-            Color paint = new Color(0x55000000);
-            Paint oldPaint = g2.getPaint();
-            g2.setPaint(paint);
-            g2.draw(shape);
-            g2.setPaint(oldPaint);
-            tl.draw(g2, xx, tl.getAscent()+10);
-            g2.dispose();
-        }
     }
 
     public GameLevel getGameLevel() {

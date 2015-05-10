@@ -104,17 +104,18 @@ public class LevelEditorFrame extends javax.swing.JFrame {
     private void initPanels() {
         ObjectListScrollPane.setViewportView(objectCC);
         LevelPanel.add(editorLP, java.awt.BorderLayout.CENTER);
-        WidthTextField.setText(""+editorLP.getLevelWidth());
+        WidthTextField.setText("" + editorLP.getLevelWidth());
         HeightTextField.setText(""+editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
         PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
         PlayerHeightTextField.setText(""+editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
-        WorldWidthTextField.setText(""+editorLP.gameLevel.worldWidth);
+        WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
         CoordXTextField.setText(""+editorLP.gameLevel.coordX);
         CoordYTextField.setText(""+editorLP.gameLevel.coordY);
+        CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
 
         editorLP.setObjectsChooserPanel(objectCC);
         WidthTextField.addKeyListener(new FromStupidProtectionKeyListener(WidthTextField, 300));
@@ -157,6 +158,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         WorldHeightTextField = new javax.swing.JTextField();
         CoordXTextField = new javax.swing.JTextField();
         CoordYTextField = new javax.swing.JTextField();
+        CoordZTextField = new javax.swing.JTextField();
         CoordX2TextField = new javax.swing.JTextField();
         CoordY2TextField = new javax.swing.JTextField();
         TileWidthTextField = new javax.swing.JTextField();
@@ -183,6 +185,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         Layer0RadioButton = new javax.swing.JRadioButton();
         Layer1RadioButton = new javax.swing.JRadioButton();
         Layer2RadioButton = new javax.swing.JRadioButton();
+        Layer3RadioButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Tiled Area Editor v.1.0");
@@ -266,6 +269,11 @@ public class LevelEditorFrame extends javax.swing.JFrame {
                 Layer2RadioButtonActionPerformed(evt);
             }
         });
+        Layer3RadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                Layer3RadioButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout LevelPropertiesPanelLayout = new javax.swing.GroupLayout(LevelPropertiesPanel);
         LevelPropertiesPanel.setLayout(LevelPropertiesPanelLayout);
@@ -288,8 +296,9 @@ public class LevelEditorFrame extends javax.swing.JFrame {
                             .addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING).addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING).addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(WorldHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(WorldWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING).addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING).addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(CoordYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(CoordXTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(CoordYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(CoordZTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(Apply2Button, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(CoordY2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(CoordX2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -354,6 +363,10 @@ public class LevelEditorFrame extends javax.swing.JFrame {
                             .addComponent(HeightLabel))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(CoordZTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(HeightLabel))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(CoordX2TextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(WidthLabel))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -387,6 +400,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
                                 .addComponent(Layer0RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(Layer1RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(Layer2RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(Layer3RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap())
                         .addGroup(ObjectsPanelLayout.createSequentialGroup()
                     .addContainerGap()
@@ -398,6 +412,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
                         .addComponent(Layer0RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(Layer1RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(Layer2RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(Layer3RadioButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(ObjectsPanelLayout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGap(28, 28, 28)
@@ -420,22 +435,37 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         Layer0RadioButton.setSelected(true);
         Layer1RadioButton.setSelected(false);
         Layer2RadioButton.setSelected(false);
+        Layer3RadioButton.setSelected(false);
         editorLP.setCurrentLayer(0);
         editorLP.invalidateGameLevel();
+        editorLP.repaint();
     }
     private void Layer1RadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
         Layer0RadioButton.setSelected(false);
         Layer1RadioButton.setSelected(true);
         Layer2RadioButton.setSelected(false);
+        Layer3RadioButton.setSelected(false);
         editorLP.setCurrentLayer(1);
         editorLP.invalidateGameLevel();
+        editorLP.repaint();
     }
     private void Layer2RadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
         Layer0RadioButton.setSelected(false);
         Layer1RadioButton.setSelected(false);
         Layer2RadioButton.setSelected(true);
+        Layer3RadioButton.setSelected(false);
         editorLP.setCurrentLayer(2);
         editorLP.invalidateGameLevel();
+        editorLP.repaint();
+    }
+    private void Layer3RadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
+        Layer0RadioButton.setSelected(false);
+        Layer1RadioButton.setSelected(false);
+        Layer2RadioButton.setSelected(false);
+        Layer3RadioButton.setSelected(true);
+        editorLP.setCurrentLayer(3);
+        editorLP.invalidateGameLevel();
+        editorLP.repaint();
     }
 
     private void Apply2ButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -453,7 +483,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
     }
 
     private void ApplyLevelPropertiesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
-        int numberWidth, numberHeight, numberWidth2, numberHeight2, numberWidth3, numberHeight3;
+        int numberWidth, numberHeight, numberWidth2, numberHeight2, numberWidth3, numberHeight3, z;
         Integer i;
         try {
             i = new Integer(WidthTextField.getText());
@@ -517,8 +547,14 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         } catch(NumberFormatException ex) {
             numberHeight3 = 0;
         }
+        try {
+            i = new Integer(CoordZTextField.getText());
+            z = i.intValue();
+        } catch(NumberFormatException ex) {
+            z = 0;
+        }
         editorLP.gameLevel.setName(NameTextField.getText());
-        editorLP.setAreaCoords(numberWidth3, numberHeight3);
+        editorLP.setAreaCoords(numberWidth3, numberHeight3, z);
         editorLP.setLevelValues(numberWidth, numberHeight, numberWidth2, numberHeight2, PlatformModeCheckBox.isSelected());
         WidthTextField.setText("" + editorLP.getLevelWidth());
         HeightTextField.setText("" + editorLP.getLevelHeight());
@@ -527,10 +563,11 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
         PlayerHeightTextField.setText("" + editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
-        WorldWidthTextField.setText(""+editorLP.gameLevel.worldWidth);
+        WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
         CoordXTextField.setText(""+editorLP.gameLevel.coordX);
         CoordYTextField.setText(""+editorLP.gameLevel.coordY);
+        CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
     }//GEN-LAST:event_ApplyLevelPropertiesButtonActionPerformed
 
     private void SaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveButtonActionPerformed
@@ -607,10 +644,11 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
         PlayerHeightTextField.setText(""+editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
-        WorldWidthTextField.setText(""+editorLP.gameLevel.worldWidth);
+        WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
         CoordXTextField.setText(""+editorLP.gameLevel.coordX);
         CoordYTextField.setText(""+editorLP.gameLevel.coordY);
+        CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
     }//GEN-LAST:event_LoadButtonActionPerformed
 
 
@@ -652,6 +690,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
     private javax.swing.JTextField WorldHeightTextField;
     private javax.swing.JTextField CoordXTextField;
     private javax.swing.JTextField CoordYTextField;
+    private javax.swing.JTextField CoordZTextField;
     private javax.swing.JTextField CoordX2TextField;
     private javax.swing.JTextField CoordY2TextField;
     private javax.swing.JTextField NewDirTextField;
@@ -666,6 +705,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
     private javax.swing.JRadioButton Layer0RadioButton;
     private javax.swing.JRadioButton Layer1RadioButton;
     private javax.swing.JRadioButton Layer2RadioButton;
+    private javax.swing.JRadioButton Layer3RadioButton;
     //private javax.swing.JButton movingPlatformCreateButton;
     // End of variables declaration//GEN-END:variables
 
