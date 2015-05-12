@@ -33,7 +33,6 @@ public class GameLevel {
     private int width = 16;
     private int height = 16;
     public int tileWidth = 32, tileHeight = 16;
-    public int playerWidth = 26, playerHeight = 12;
     boolean platformMode = false;
     private boolean changed = false;
     public int[][] content0 = null;
@@ -47,7 +46,7 @@ public class GameLevel {
     private ArrayDeque<Platform> platforms = new ArrayDeque<Platform>();
     private ArrayDeque<ImageForPalette> platformPaletteImages = new ArrayDeque<ImageForPalette>();
     ImageForPalette[] platformPaletteImageArray = null;
-    public int worldWidth = 0, worldHeight = 0, coordX = 0, coordY = 0, coordZ = 0;
+    public int worldWidth = 5, worldHeight = 3, coordX = 0, coordY = 0, coordZ = 0;
     public int nextLevelX = 0, nextLevelY = 0;
 
     public static class ImageForPalette {
@@ -195,8 +194,6 @@ public class GameLevel {
         }
         tileWidth = Math.max(1, tw);
         tileHeight = Math.max(1, th);
-        playerHeight = Math.max(1, pw);
-        playerHeight = Math.max(1, ph);
         platformMode = pm;
         if (!ok) {
             content0  = new int[getWidth()][getHeight()];
@@ -295,10 +292,10 @@ public class GameLevel {
             RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
             //fos.skipBytes((int)fos.length()-1);
             int size = fos.read();
-            fos.skipBytes(size + 9);
+            fos.skipBytes(size + 7);
             int x=999, y=999, z=999;
             boolean found = false;
-            long read = size + 10;
+            long read = size + 8;
             do {
                 if (read >= fos.length()) break;
                 x = fos.read();
@@ -379,8 +376,6 @@ public class GameLevel {
             fos.write(height);
             fos.write(tileWidth);
             fos.write(tileHeight);
-            fos.write(playerWidth);
-            fos.write(playerHeight);
             fos.write(coordX);
             fos.write(coordY);
             fos.write(coordZ);
@@ -607,12 +602,10 @@ public class GameLevel {
         height = fInput.read();
         tileWidth = fInput.read();
         tileHeight = fInput.read();
-        playerWidth = fInput.read();
-        playerHeight = fInput.read();
 
         int x=999, y=999, z=999;
         boolean found = false;
-        long read = 10+name.length();
+        long read = 8+name.length();
         do {
             if (read >= length) break;
             x = fInput.read();

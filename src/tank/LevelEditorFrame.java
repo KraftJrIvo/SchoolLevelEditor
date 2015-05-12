@@ -108,8 +108,6 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         HeightTextField.setText(""+editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
-        PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
-        PlayerHeightTextField.setText(""+editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
         WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
@@ -560,8 +558,6 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         HeightTextField.setText("" + editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
-        PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
-        PlayerHeightTextField.setText("" + editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
         WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
@@ -641,8 +637,6 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         HeightTextField.setText("" + editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
-        PlayerWidthTextField.setText(""+editorLP.gameLevel.playerWidth);
-        PlayerHeightTextField.setText(""+editorLP.gameLevel.playerHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
         WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
