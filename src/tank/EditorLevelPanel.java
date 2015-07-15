@@ -8,10 +8,7 @@ package tank;
 
 import java.awt.*;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
@@ -28,7 +25,7 @@ import tank.ObjectsChooserPanel.Rect;
  * @author IVO
  */
 public class EditorLevelPanel extends JPanel
-        implements MouseListener, MouseMotionListener {
+        implements MouseListener, MouseMotionListener, KeyListener {
     BufferedImage backgroundBufferedImage = null;
     BufferedImage gameLevelBufferedImage0 = null;
     BufferedImage gameLevelBufferedImage1 = null;
@@ -94,6 +91,16 @@ public class EditorLevelPanel extends JPanel
 
     }
 
+    public void shiftTiles(int n) {
+        for (int i = 0; i < getLevelWidth(); ++i) {
+            for (int t = 0; t < getLevelHeight(); ++t) {
+                if (gameLevel.content0[i][t] >= gameLevel.getObjectsChooserPanel().imagesCount-1) gameLevel.content0[i][t] += n;
+                if (gameLevel.content1[i][t] >= gameLevel.getObjectsChooserPanel().imagesCount-1) gameLevel.content1[i][t] += n;
+                if (gameLevel.content2[i][t] >= gameLevel.getObjectsChooserPanel().imagesCount-1) gameLevel.content2[i][t] += n;
+            }
+        }
+        repaint();
+    }
 
     private void invalidateAll() {
         invalidateBackgroud();
@@ -275,12 +282,14 @@ public class EditorLevelPanel extends JPanel
                         height = image.getHeight(io)/4;
                     }
                     float test1 = (float)height/(float)width;
-                    int imageTrueHeight = (int)(cell.width() * test1);
+                    int imageTrueWidth = (int)(image.getWidth(this)*cell.width()/gameLevel.tileWidth);
+                    int imageTrueHeight = (int)(image.getHeight(this)*cell.height()/gameLevel.tileHeight);
                     //g.drawImage(image, cell.left, cell.bottom-imageTrueHeight+getOffset(n), cell.width(), imageTrueHeight, io);
                     if (n != 3) {
                         if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
-                            g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.width(), imageTrueHeight, io);
+                            g.drawImage(image, cell.left+cell.width()/2-imageTrueWidth/2, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), imageTrueWidth, imageTrueHeight, io);
                         } else {
+                            imageTrueHeight = (int)(cell.width() * test1);
                             boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.content3[i-1][t] == imageIndex && n == 3)));
                             boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.content3[i+1][t] == imageIndex && n == 3)));
                             boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.content3[i][t-1] == imageIndex && n == 3)));
@@ -358,7 +367,6 @@ public class EditorLevelPanel extends JPanel
 
     public void mousePressed(MouseEvent e) {
         mouseButton = e.getButton();
-
         mouseEvent(e);
     }
 
@@ -385,6 +393,8 @@ public class EditorLevelPanel extends JPanel
             if (fillCell(e.getX(), e.getY(), -1)) {
                 repaint();
             }
+        } else if (mouseButton == MouseEvent.BUTTON2) {
+                shiftTiles(1);
         }
     }
 
@@ -496,4 +506,22 @@ public class EditorLevelPanel extends JPanel
     }
 
 
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_PLUS) {
+            shiftTiles(1);
+        } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
+            shiftTiles(-1);
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
 }

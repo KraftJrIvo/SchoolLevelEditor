@@ -32,9 +32,28 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  *
  * @author IVO
  */
-public class LevelEditorFrame extends javax.swing.JFrame {
-    ObjectsChooserPanel objectCC = new ObjectsChooserPanel();
+public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
+    ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\platform");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_PLUS) {
+            editorLP.shiftTiles(1);
+        } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
+            editorLP.shiftTiles(-1);
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
 
     static class FromStupidProtectionKeyListener implements KeyListener {
         private JTextField textField;
@@ -566,6 +585,10 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
     }//GEN-LAST:event_ApplyLevelPropertiesButtonActionPerformed
 
+    /*private void PlatformModeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
+
+    }*/
+
     private void SaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveButtonActionPerformed
         JFileChooser chooser = new JFileChooser();
         URLClassLoader urlLoader =
@@ -582,11 +605,11 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
             "Tiled World", "tlw");
         //file.renameTo(new File(file.getName()+".tlw"));
-        chooser.setCurrentDirectory(file);
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
         chooser.setFileFilter(filter);
         int returnVal = chooser.showSaveDialog(this);
         if(returnVal == JFileChooser.APPROVE_OPTION) {
-            editorLP.saveLevel(chooser.getSelectedFile().getAbsolutePath()+".tlw");
+            editorLP.saveLevel(chooser.getSelectedFile().getAbsolutePath());
         }
     }//GEN-LAST:event_SaveButtonActionPerformed
 
@@ -604,7 +627,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         File file = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+objectCC.currentDir);
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "Tiled World", "tlw");
-        chooser.setCurrentDirectory(file);
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
         chooser.setFileFilter(filter);
         int returnVal = chooser.showSaveDialog(this);
         if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -626,7 +649,7 @@ public class LevelEditorFrame extends javax.swing.JFrame {
         File file = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+objectCC.currentDir);
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
             "Tiled World", "tlw");
-        chooser.setCurrentDirectory(file);
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
         chooser.setFileFilter(filter);
         int returnVal = chooser.showOpenDialog(this);
         if(returnVal == JFileChooser.APPROVE_OPTION) {

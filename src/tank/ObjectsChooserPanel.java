@@ -66,6 +66,8 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         calculateImagesRect();
     }
 
+
+
     public void mouseClicked(MouseEvent e) {
     }
 
@@ -180,22 +182,14 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         calculateImagesRect();
     }
 
-    public ObjectsChooserPanel() {
+    public ObjectsChooserPanel(String str) {
         imgColumnsCount = 4;
         imgLinesCount = 10;
         images = new ArrayList<Image>();
         tilesets = new ArrayList<Image>();
         imagesRect = new ArrayList<Rect>();
-        URLClassLoader urlLoader =
-                (URLClassLoader)getClass().getClassLoader();
-        int urlID = 0;
-        for (int i=0; i<urlLoader.getURLs().length; ++i) {
-            if (urlLoader.getURLs()[i].toString().contains("images\\"+currentDir)) {
-                urlID = i;
-                break;
-            }
-        }
-        File dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir);
+        //chooser.setCurrentDirectory();
+        File dir = new File(str);
         File[] directoryListing = dir.listFiles();
         if (directoryListing != null) {
             for (File child : directoryListing) {
@@ -204,7 +198,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                     images.add(image);
                 }
             }
-            dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\tiles");
+            dir = new File(str+"\\tiles");
             directoryListing = dir.listFiles();
             for (File child : directoryListing) {
                 Image image = getImage(this, child.getPath());
