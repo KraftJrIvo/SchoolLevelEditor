@@ -27,6 +27,7 @@ import tank.Grid.Point;
 public class GameLevel {
     private Component parent;
     private ObjectsChooserPanel objectsChooserPanel = null;
+    private ObjectsChooserPanel attributesChooserPanel = null;
     private String name = "Untitled1";
     //private int width = 32;
     //private int height = 32;
@@ -38,7 +39,14 @@ public class GameLevel {
     public int[][] content0 = null;
     public int[][] content1 = null;
     public int[][] content2 = null;
-    public int[][] content3 = null;
+    //public int[][] content3 = null;
+
+    public int[][][] values = null;
+    int curType=0;
+    int curAngle=0;
+    int curXOffset=0;
+    int curYOffset=0;
+
     private String backgroundPath = null;
     private Image backgroundImage = null;
     private int tempPlatformDecorationPaletteSize = -1;
@@ -153,6 +161,9 @@ public class GameLevel {
     public void  setObjectsChooserPanel(ObjectsChooserPanel panel) {
         objectsChooserPanel = panel;
     }
+    public void  setAttributesChooserPanel(ObjectsChooserPanel panel) {
+        attributesChooserPanel = panel;
+    }
 
     public ObjectsChooserPanel getObjectsChooserPanel() {
         return objectsChooserPanel;
@@ -173,14 +184,19 @@ public class GameLevel {
         content0  = new int[getWidth()][getHeight()];
         content1  = new int[getWidth()][getHeight()];
         content2  = new int[getWidth()][getHeight()];
-        content3  = new int[getWidth()][getHeight()];
+        values = new int[getWidth()][getHeight()][4];
+        //content3  = new int[getWidth()][getHeight()];
         int x, y;
         for (y=0; y<getHeight(); ++y){
             for (x=0; x<getWidth(); ++x){
                 content0[x][y] = -1;
                 content1[x][y] = -1;
                 content2[x][y] = -1;
-                content3[x][y] = -1;
+                //content3[x][y] = -1;
+                for (int i=0; i<4; ++i){
+                    if (i == 0) values[x][y][i] = -1;
+                    else values[x][y][i] = 0;
+                }
             }
         }
         changed = false;
@@ -199,14 +215,17 @@ public class GameLevel {
             content0  = new int[getWidth()][getHeight()];
             content1  = new int[getWidth()][getHeight()];
             content2  = new int[getWidth()][getHeight()];
-            content3  = new int[getWidth()][getHeight()];
+            values = new int[getWidth()][getHeight()][4];
             int x, y;
             for (y=0; y<getHeight(); ++y){
                 for (x=0; x<getWidth(); ++x){
                     content0[x][y] = -1;
                     content1[x][y] = -1;
                     content2[x][y] = -1;
-                    content3[x][y] = -1;
+                    for (int i=0; i<4; ++i){
+                        if (i == 0) values[x][y][i] = -1;
+                        else values[x][y][i] = 0;
+                    }
                 }
             }
             changed = false;
@@ -241,7 +260,7 @@ public class GameLevel {
         } else if (layer == 2) {
             return content2[x][y];
         } else {
-            return content3[x][y];
+            return values[x][y][0];
         }
     }
 
@@ -253,21 +272,32 @@ public class GameLevel {
             content0[x][y] = item;
             if (content1[x][y] == -1) {
                 if (item == -1) {
-                    content3[x][y] = -1;
+                    values[x][y][0] = -1;
                 }
-                else content3[x][y] = 1;
+                else values[x][y][0] = 1;
             }
         } else if (layer == 1) {
             content1[x][y] = item;
             if (item == -1) {
-                if (content0[x][y] == -1)content3[x][y] = -1;
-                else content3[x][y] = 1;
+                if (content0[x][y] == -1) {
+                    values[x][y][0] = -1;
+                }
+                else values[x][y][0] = 1;
             }
-            else content3[x][y] = 2;
+            else values[x][y][0] = 2;
         } else if (layer == 2) {
             content2[x][y] = item;
         } else {
-            content3[x][y] = item;
+            values[x][y][0] = item;
+            if (item == -1) {
+                values[x][y][1] = 0;
+                values[x][y][2] = 0;
+                values[x][y][3] = 0;
+            } else {
+                values[x][y][1] = curAngle;
+                values[x][y][2] = curXOffset;
+                values[x][y][3] = curYOffset;
+            }
         }
         changed = true;
     }
@@ -303,8 +333,8 @@ public class GameLevel {
                 z = fos.read();
                 if (x != coordX || y != coordY || z != coordZ) {
                     read += 3;
-                    fos.skipBytes(width*height*4);
-                    read += width*height*4;
+                    fos.skipBytes(width*height*7);
+                    read += width*height*7;
                 } else {
                     found = true;
                     break;
@@ -333,7 +363,10 @@ public class GameLevel {
             }
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
-                    fos.write(content3[x][y]);
+                    fos.write(values[x][y][0]);
+                    fos.write(values[x][y][1]);
+                    fos.write(values[x][y][2]);
+                    fos.write(values[x][y][3]);
                 }
             }
             //fos.write(254);
@@ -397,7 +430,10 @@ public class GameLevel {
             }
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
-                    fos.write(content3[x][y]);
+                    fos.write(values[x][y][0]);
+                    fos.write(values[x][y][1]);
+                    fos.write(values[x][y][2]);
+                    fos.write(values[x][y][3]);
                 }
             }
             //fos.write(254);
@@ -613,8 +649,8 @@ public class GameLevel {
             z = fInput.read();
             if (x != coordX || y != coordY || z != coordZ) {
                 read += 3;
-                fInput.skip(width*height*4);
-                read += width*height*4;
+                fInput.skip(width*height*7);
+                read += width*height*7;
             } else {
                 found = true;
                 break;
@@ -652,7 +688,7 @@ public class GameLevel {
             content0 = new int[width][height];
             content1 = new int[width][height];
             content2 = new int[width][height];
-            content3 = new int[width][height];
+            values = new int[width][height][4];
             changed = false;
             int sym;
             for (y = 0; y < height; ++y) {
@@ -679,8 +715,17 @@ public class GameLevel {
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
                     sym = fInput.read();
-                    if (sym == 255) content3[x][y] = -1;
-                    else content3[x][y] = sym;
+                    if (sym == 255) values[x][y][0] = -1;
+                    else values[x][y][0] = sym;
+                    sym = fInput.read();
+                    if (sym == 255) values[x][y][1] = 0;
+                    else values[x][y][1] = sym;
+                    sym = fInput.read();
+                    if (sym == 255) values[x][y][2] = 0;
+                    else values[x][y][2] = sym;
+                    sym = fInput.read();
+                    if (sym == 255) values[x][y][3] = 0;
+                    else values[x][y][3] = sym;
                 }
             }
             return true;

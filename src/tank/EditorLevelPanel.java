@@ -25,7 +25,7 @@ import tank.ObjectsChooserPanel.Rect;
  * @author IVO
  */
 public class EditorLevelPanel extends JPanel
-        implements MouseListener, MouseMotionListener, KeyListener {
+        implements MouseListener, MouseMotionListener, KeyListener, MouseWheelListener {
     BufferedImage backgroundBufferedImage = null;
     BufferedImage gameLevelBufferedImage0 = null;
     BufferedImage gameLevelBufferedImage1 = null;
@@ -49,9 +49,12 @@ public class EditorLevelPanel extends JPanel
     public void  setObjectsChooserPanel(ObjectsChooserPanel panel) {
         gameLevel.setObjectsChooserPanel(panel);
     }
+    public void  setAttributesChooserPanel(ObjectsChooserPanel panel) {
+        gameLevel.setAttributesChooserPanel(panel);
+    }
 
     private int getOffset(int layer, int texHeight) {
-        if (layer == 0) {
+        if (layer == 0 && !gameLevel.platformMode) {
             return texHeight - grid.getCellRect(0, 0).height();
         } else {
             return 0;
@@ -266,10 +269,57 @@ public class EditorLevelPanel extends JPanel
         currentLayer = layer;
     }
 
+    public static BufferedImage toBufferedImage(Image img){
+        if (img instanceof BufferedImage) {
+            return (BufferedImage) img;
+        }
+        // Create a buffered image with transparency
+        BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+        // Draw the image on to the buffered image
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(img, 0, 0, null);
+        bGr.dispose();
+        // Return the buffered image
+        return bimage;
+    }
+
+    public static Image toImage(BufferedImage bimage){
+        // Casting is enough to convert from BufferedImage to Image
+        Image img = (Image) bimage;
+        return img;
+    }
+
+    public static Image getEmptyImage(int width, int height){
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        return toImage(img);
+    }
+
+
+    public static Image rotate(Image img, double angle)
+    {
+        double sin = Math.abs(Math.sin(Math.toRadians(angle))),
+                cos = Math.abs(Math.cos(Math.toRadians(angle)));
+
+        int w = img.getWidth(null), h = img.getHeight(null);
+
+        int neww = (int) Math.floor(w*cos + h*sin),
+                newh = (int) Math.floor(h*cos + w*sin);
+
+        BufferedImage bimg = toBufferedImage(getEmptyImage(neww, newh));
+        Graphics2D g = bimg.createGraphics();
+
+        g.translate((neww-w)/2, (newh-h)/2);
+        g.rotate(Math.toRadians(angle), w/2, h/2);
+        g.drawRenderedImage(toBufferedImage(img), null);
+        g.dispose();
+
+        return toImage(bimg);
+    }
+
     public void drawLayer(Graphics g, ImageObserver io, int n) {
         for (int i = 0; i < getLevelWidth(); ++i) {
             for (int t = 0; t < getLevelHeight(); ++t) {
-                if ((gameLevel.content2[i][t] != -1 && n == 2) || (gameLevel.content1[i][t] != -1 && n == 1) || (gameLevel.content0[i][t] != -1 && n == 0) || (gameLevel.content3[i][t] != -1 && n == 3)) {
+                if ((gameLevel.content2[i][t] != -1 && n == 2) || (gameLevel.content1[i][t] != -1 && n == 1) || (gameLevel.content0[i][t] != -1 && n == 0) || (gameLevel.values[i][t][0] != -1 && n == 3)) {
                     Rect cell = grid.getCellRect(i, t);
                     int imageIndex = gameLevel.getCell(i, t, n);
                     Image image = gameLevel.getObjectsChooserPanel().getImage(imageIndex);
@@ -286,14 +336,28 @@ public class EditorLevelPanel extends JPanel
                     int imageTrueHeight = (int)(image.getHeight(this)*cell.height()/gameLevel.tileHeight);
                     //g.drawImage(image, cell.left, cell.bottom-imageTrueHeight+getOffset(n), cell.width(), imageTrueHeight, io);
                     if (n != 3) {
+                        int XOffset = 0;
+                        int YOffset = 0;
+                        if (n == 2) {
+                            XOffset = gameLevel.values[i][t][2]*(cell.width()/gameLevel.tileWidth);
+                            YOffset = gameLevel.values[i][t][3]*(cell.height()/gameLevel.tileHeight);
+                        }
                         if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
-                            g.drawImage(image, cell.left+cell.width()/2-imageTrueWidth/2, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), imageTrueWidth, imageTrueHeight, io);
+                            if (gameLevel.values[i][t][1] == 1) {
+                                g.drawImage(rotate(image, 90), cell.left + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
+                            } else if (gameLevel.values[i][t][1] == 2) {
+                                g.drawImage(rotate(image, 180), cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.top + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
+                            } else if (gameLevel.values[i][t][1] == 3) {
+                                g.drawImage(rotate(image, 270), cell.left+(cell.width()-imageTrueHeight) + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
+                            } else {
+                                g.drawImage(image, cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
+                            }
                         } else {
                             imageTrueHeight = (int)(cell.width() * test1);
-                            boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.content3[i-1][t] == imageIndex && n == 3)));
-                            boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.content3[i+1][t] == imageIndex && n == 3)));
-                            boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.content3[i][t-1] == imageIndex && n == 3)));
-                            boolean down = (t < getLevelHeight()-1 && ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.content3[i][t+1] == imageIndex && n == 3)));
+                            boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
+                            boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
+                            boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.values[i][t-1][0] == imageIndex && n == 3)));
+                            boolean down = (t < getLevelHeight()-1 && ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.values[i][t+1][0] == imageIndex && n == 3)));
                             int tileX = getRightTile(left, right, up, down).x;
                             int tileY = getRightTile(left, right, up, down).y;
                             if (getTileInverted(left, right, up, down)) {
@@ -307,7 +371,7 @@ public class EditorLevelPanel extends JPanel
                     } else {
                         g.setColor(new Color(1.0f, 0, 1.0f, 0.25f));
                         g.setFont(g.getFont().deriveFont(40.0f));
-                        g.drawString(getTileString(gameLevel.content3[i][t]), cell.left, cell.bottom);
+                        g.drawString(getTileString(gameLevel.values[i][t][0]), cell.left, cell.bottom);
                     }
                 }
             }
@@ -323,6 +387,11 @@ public class EditorLevelPanel extends JPanel
             case 3: return "SCE";
             case 4: return "STA";
             case 5: return "DYN";
+            case 6: return "H";
+            case 7: return "V";
+            case 8: return "O";
+            case 9: return ".";
+            case 10: return "!?!";
         }
         return "";
     }
@@ -386,8 +455,14 @@ public class EditorLevelPanel extends JPanel
     private void mouseEvent(MouseEvent e) {
         if (mouseButton == MouseEvent.BUTTON1
                 && gameLevel.getObjectsChooserPanel().getSelectedObject() != -1) {
-            if (fillCell(e.getX(), e.getY(), gameLevel.getObjectsChooserPanel().getSelectedObject())) {
-                repaint();
+            if (currentLayer != 3) {
+                if (fillCell(e.getX(), e.getY(), gameLevel.getObjectsChooserPanel().getSelectedObject())) {
+                    repaint();
+                }
+            } else {
+                if (fillCell(e.getX(), e.getY(), gameLevel.curType)) {
+                    repaint();
+                }
             }
         } else if (mouseButton == MouseEvent.BUTTON3) {
             if (fillCell(e.getX(), e.getY(), -1)) {
@@ -399,6 +474,7 @@ public class EditorLevelPanel extends JPanel
     }
 
     public void mouseMoved(MouseEvent e) {
+        System.out.println(gameLevel.curType + " " + gameLevel.curAngle + " " + gameLevel.curXOffset + " " + gameLevel.curYOffset);
     }
 
     public void setBackground(String name) {
@@ -522,6 +598,12 @@ public class EditorLevelPanel extends JPanel
 
     @Override
     public void keyReleased(KeyEvent e) {
+        //shiftTiles(-1);
+    }
 
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        gameLevel.curAngle++;
+        if (gameLevel.curAngle > 3) gameLevel.curAngle = 0;
     }
 }

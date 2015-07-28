@@ -34,6 +34,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
     ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\platform");
+    ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\forest");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
 
     @Override
@@ -122,6 +123,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
 
     private void initPanels() {
         ObjectListScrollPane.setViewportView(objectCC);
+        ObjectListScrollPane2.setViewportView(attributesOCC);
         LevelPanel.add(editorLP, java.awt.BorderLayout.CENTER);
         WidthTextField.setText("" + editorLP.getLevelWidth());
         HeightTextField.setText(""+editorLP.getLevelHeight());
@@ -135,6 +137,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
 
         editorLP.setObjectsChooserPanel(objectCC);
+        editorLP.setAttributesChooserPanel(attributesOCC);
         WidthTextField.addKeyListener(new FromStupidProtectionKeyListener(WidthTextField, 300));
         HeightTextField.addKeyListener(new FromStupidProtectionKeyListener(HeightTextField, 300));
 
@@ -179,6 +182,14 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CurXLabel = new javax.swing.JLabel();
         CurYLabel = new javax.swing.JLabel();
         CurZLabel = new javax.swing.JLabel();
+        OffsetXLabel = new javax.swing.JLabel();
+        OffsetYLabel = new javax.swing.JLabel();
+        AngleLabel = new javax.swing.JLabel();
+        TypeLabel = new javax.swing.JLabel();
+        OffsetXTextField = new javax.swing.JTextField();
+        OffsetYTextField = new javax.swing.JTextField();
+        AngleTextField = new javax.swing.JTextField();
+        TypeTextField = new javax.swing.JTextField();
         WidthTextField = new javax.swing.JTextField();
         HeightTextField = new javax.swing.JTextField();
         NewDirTextField = new javax.swing.JTextField();
@@ -197,7 +208,9 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         Apply2Button = new javax.swing.JButton();
         Apply3Button = new javax.swing.JButton();
         ObjectsPanel = new javax.swing.JPanel();
+        AttributesPanel = new javax.swing.JPanel();
         ObjectListScrollPane = new javax.swing.JScrollPane();
+        ObjectListScrollPane2 = new javax.swing.JScrollPane();
         ToolsPanel = new javax.swing.JPanel();
         //backgroundChangeButton = new javax.swing.JButton();
         //movingPlatformCreateButton = new javax.swing.JButton();
@@ -266,6 +279,10 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CurXLabel.setText("Current Area X:");
         CurYLabel.setText("Current Area Y:");
         CurZLabel.setText("Current Area Z:");
+        OffsetXLabel.setText("X Offset:");
+        OffsetYLabel.setText("Y Offset:");
+        AngleLabel.setText("Orientation:");
+        TypeLabel.setText("Type:");
 
         Layer1RadioButton.setSelected(true);
 
@@ -309,94 +326,105 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         javax.swing.GroupLayout LevelPropertiesPanelLayout = new javax.swing.GroupLayout(LevelPropertiesPanel);
         LevelPropertiesPanel.setLayout(LevelPropertiesPanelLayout);
         LevelPropertiesPanelLayout.setHorizontalGroup(
-            LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
-                .addContainerGap(22, Short.MAX_VALUE)
-                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(NameLabel)
-                        .addComponent(AreaWidthLabel)
-                        .addComponent(AreaHeightLabel)
-                        .addComponent(TileWidthLabel)
-                        .addComponent(TileHeightLabel)
-                        .addComponent(PlatformModeLabel)
-                        .addComponent(WorldWidthLabel)
-                        .addComponent(WorldHeightLabel)
-                        .addComponent(CurXLabel)
-                        .addComponent(CurYLabel)
-                        .addComponent(CurZLabel))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false).addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(PlatformModeCheckBox, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(PlayerHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(PlayerWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(TileHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(TileWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(WorldHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(WorldWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(CoordXTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(CoordYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(CoordZTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(Apply2Button, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(CoordY2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(CoordX2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(NewDirTextField, javax.swing.GroupLayout.Alignment.TRAILING)
-                            //.addComponent(Apply3Button, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(NameTextField, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE))
-                .addContainerGap())
-            .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
-                .addGap(46, 46, 46)
-                .addComponent(ApplyLevelPropertiesButton)
-                .addContainerGap(52, Short.MAX_VALUE))
+                LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
+                                .addContainerGap(22, Short.MAX_VALUE)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                .addComponent(NameLabel)
+                                                .addComponent(AreaWidthLabel)
+                                                .addComponent(AreaHeightLabel)
+                                                .addComponent(TileWidthLabel)
+                                                .addComponent(TileHeightLabel)
+                                                .addComponent(PlatformModeLabel)
+                                                .addComponent(WorldWidthLabel)
+                                                .addComponent(WorldHeightLabel)
+                                                .addComponent(CurXLabel)
+                                                .addComponent(CurYLabel)
+                                                .addComponent(CurZLabel)
+                                                .addComponent(OffsetXLabel)
+                                                .addComponent(OffsetYLabel)
+                                                .addComponent(TypeLabel)
+                                                .addComponent(AngleLabel)
+                                )
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false).addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(PlatformModeCheckBox, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(PlayerHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(PlayerWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(TileHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(TileWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(WorldHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(WorldWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(CoordXTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(CoordYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(CoordZTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(ApplyLevelPropertiesButton, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(OffsetXTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(OffsetYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(TypeTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(AngleTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(Apply2Button, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(CoordY2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(CoordX2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(NewDirTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                //.addComponent(Apply3Button, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(NameTextField, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE))
+                                .addContainerGap())
+                        .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
+                                .addGap(46, 46, 46)
+                                .addComponent(ApplyLevelPropertiesButton)
+
+                                .addContainerGap(52, Short.MAX_VALUE))
         );
         LevelPropertiesPanelLayout.setVerticalGroup(
-            LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
-                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(NameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(NameLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(WidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(AreaWidthLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(HeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(AreaHeightLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(TileWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(TileWidthLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(TileHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(TileHeightLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(PlatformModeCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(PlatformModeLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(WorldWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(WorldWidthLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(WorldHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(WorldHeightLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(CoordXTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(CurXLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(CoordYTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(CurYLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(CoordZTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(CurZLabel))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(LevelPropertiesPanelLayout.createSequentialGroup()
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(NameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(NameLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(WidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(AreaWidthLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(HeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(AreaHeightLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(TileWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(TileWidthLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(TileHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(TileHeightLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(PlatformModeCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(PlatformModeLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(WorldWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(WorldWidthLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(WorldHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(WorldHeightLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(CoordXTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(CurXLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(CoordYTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(CurYLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(CoordZTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(CurZLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 
                     /*.addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(CoordX2TextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -417,9 +445,26 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                     .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(Apply3Button, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(HeightLabel))*/
+                                .addComponent(ApplyLevelPropertiesButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(OffsetXTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(OffsetXLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(OffsetYTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(OffsetYLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(TypeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(TypeLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(AngleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(AngleLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 
-                    .addComponent(ApplyLevelPropertiesButton)
-                .addContainerGap(151, Short.MAX_VALUE))
+                                .addContainerGap(151, Short.MAX_VALUE))
         );
 
         MenuTabbedPane.addTab("Level properties", LevelPropertiesPanel);
@@ -453,9 +498,30 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                 .addContainerGap())
         );
 
+        javax.swing.GroupLayout AttributesPanelLayout = new javax.swing.GroupLayout(AttributesPanel);
+        AttributesPanel.setLayout(AttributesPanelLayout);
+        AttributesPanelLayout.setHorizontalGroup(
+                AttributesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(AttributesPanelLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addContainerGap())
+                        .addGroup(AttributesPanelLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(ObjectListScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE)
+                                .addContainerGap())
+        );
+        AttributesPanelLayout.setVerticalGroup(
+                AttributesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(AttributesPanelLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGap(28, 28, 28)
+                                .addComponent(ObjectListScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                                .addContainerGap())
+        );
+
         MenuTabbedPane.addTab("Objects", ObjectsPanel);
 
-
+        //MenuTabbedPane.addTab("Attributes", AttributesPanel);
         getContentPane().add(MenuTabbedPane, java.awt.BorderLayout.LINE_START);
 
         LevelPanel.setLayout(new java.awt.BorderLayout());
@@ -585,6 +651,30 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
             z = i.intValue();
         } catch(NumberFormatException ex) {
             z = 0;
+        }
+        try {
+            i = new Integer(OffsetXTextField.getText());
+            editorLP.gameLevel.curXOffset = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curXOffset = 0;
+        }
+        try {
+            i = new Integer(OffsetYTextField.getText());
+            editorLP.gameLevel.curYOffset = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curYOffset = 0;
+        }
+        try {
+            i = new Integer(TypeTextField.getText());
+            editorLP.gameLevel.curType = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curType = 0;
+        }
+        try {
+            i = new Integer(AngleTextField.getText());
+            editorLP.gameLevel.curAngle = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curAngle = 0;
         }
         editorLP.gameLevel.setName(NameTextField.getText());
         editorLP.setAreaCoords(numberWidth3, numberHeight3, z);
@@ -718,9 +808,15 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JLabel CurXLabel;
     private javax.swing.JLabel CurYLabel;
     private javax.swing.JLabel CurZLabel;
+    private javax.swing.JLabel OffsetXLabel;
+    private javax.swing.JLabel OffsetYLabel;
+    private javax.swing.JLabel AngleLabel;
+    private javax.swing.JLabel TypeLabel;
     private javax.swing.JTextField NameTextField;
     private javax.swing.JScrollPane ObjectListScrollPane;
+    private javax.swing.JScrollPane ObjectListScrollPane2;
     private javax.swing.JPanel ObjectsPanel;
+    private javax.swing.JPanel AttributesPanel;
     private javax.swing.JButton SaveButton;
     private javax.swing.JButton TestButton;
     private javax.swing.JPanel ToolsPanel;
@@ -734,6 +830,10 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JTextField CoordZTextField;
     private javax.swing.JTextField CoordX2TextField;
     private javax.swing.JTextField CoordY2TextField;
+    private javax.swing.JTextField OffsetXTextField;
+    private javax.swing.JTextField TypeTextField;
+    private javax.swing.JTextField AngleTextField;
+    private javax.swing.JTextField OffsetYTextField;
     private javax.swing.JTextField NewDirTextField;
     private javax.swing.JButton Apply3Button;
     //private javax.swing.JButton backgroundChangeButton;
