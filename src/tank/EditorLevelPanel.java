@@ -46,6 +46,45 @@ public class EditorLevelPanel extends JPanel
     private java.awt.Frame parentFrame;
     int currentLayer = 1;
 
+    final int SPAWN_POINT_BLOCK_ID = 0;
+    final int FLOOR_BLOCK_ID = 1;
+    final int WALL_BLOCK_ID = 2;
+    final int SCENERY_BLOCK_ID = 3;
+    final int STATIC_OBJECT_BLOCK_ID = 4;
+    final int DYNAMIC_OBJECT_BLOCK_ID = 5;
+    final int RECTANGLE_DEATH_TRIGGER_BLOCK_ID = 6;
+    final int TRIANGLE_DEATH_TRIGGER_BLOCK_ID = 7;
+    final int CIRCLE_DEATH_TRIGGER_BLOCK_ID = 8;
+    final int POINT_DEATH_TRIGGER_BLOCK_ID = 9;
+    final int SAVE_POINT_BLOCK_ID = 10;
+    final int PLATFORM_BLOCK_ID = 11;
+    final int CLIMBABLE_BLOCK_ID = 12;
+    final int SIGN_BLOCK_ID = 13;
+    final int FLOATING_PLATFORM_BLOCK_ID = 14;
+    final int IN_Z_LAYER_BLOCK_ID = 15;
+    final int OUT_Z_LAYER_BLOCK_ID = 16;
+    final int PORTAL_BLOCK_ID = 17;
+    final int HORIZONTAL_PLATFORM_BLOCK_ID = 18;
+    final int VERTICAL_PLATFORM_BLOCK_ID = 19;
+
+    final int VALUES_ID = 0;
+    final int VALUES_ANGLE = 1;
+    final int VALUES_X_OFFSET = 2;
+    final int VALUES_Y_OFFSET = 3;
+/*
+    case 0: return "!S!";
+    case 1: return "FLR";
+    case 2: return "WAL";
+    case 3: return "SCE";
+    case 4: return "STA";
+    case 5: return "DYN";
+    case 6: return "H";
+    case 7: return "V";
+    case 8: return "O";
+    case 9: return ".";
+    case 10: return "!?!";
+*/
+
     public void  setObjectsChooserPanel(ObjectsChooserPanel panel) {
         gameLevel.setObjectsChooserPanel(panel);
     }
@@ -322,7 +361,12 @@ public class EditorLevelPanel extends JPanel
                 if ((gameLevel.content2[i][t] != -1 && n == 2) || (gameLevel.content1[i][t] != -1 && n == 1) || (gameLevel.content0[i][t] != -1 && n == 0) || (gameLevel.values[i][t][0] != -1 && n == 3)) {
                     Rect cell = grid.getCellRect(i, t);
                     int imageIndex = gameLevel.getCell(i, t, n);
-                    Image image = gameLevel.getObjectsChooserPanel().getImage(imageIndex);
+                    Image image;
+                    if (n != 3) {
+                        image = gameLevel.getObjectsChooserPanel().getImage(imageIndex);
+                    } else {
+                        image = gameLevel.getObjectsChooserPanel().getImage(0);
+                    }
                     int width, height;
                     if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
                         width = image.getWidth(io);
@@ -339,20 +383,20 @@ public class EditorLevelPanel extends JPanel
                         int XOffset = 0;
                         int YOffset = 0;
                         if (n == 2) {
-                            XOffset = gameLevel.values[i][t][2]*(cell.width()/gameLevel.tileWidth);
-                            YOffset = gameLevel.values[i][t][3]*(cell.height()/gameLevel.tileHeight);
+                            XOffset = gameLevel.values[i][t][VALUES_X_OFFSET]*(cell.width()/gameLevel.tileWidth);
+                            YOffset = gameLevel.values[i][t][VALUES_Y_OFFSET]*(cell.height()/gameLevel.tileHeight);
                         }
                         if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
-                            if (gameLevel.values[i][t][1] == 1) {
+                            if (gameLevel.values[i][t][VALUES_ANGLE] == 1) {
                                 g.drawImage(rotate(image, 90), cell.left + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
-                            } else if (gameLevel.values[i][t][1] == 2) {
+                            } else if (gameLevel.values[i][t][VALUES_ANGLE] == 2) {
                                 g.drawImage(rotate(image, 180), cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.top + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
-                            } else if (gameLevel.values[i][t][1] == 3) {
+                            } else if (gameLevel.values[i][t][VALUES_ANGLE] == 3) {
                                 g.drawImage(rotate(image, 270), cell.left+(cell.width()-imageTrueHeight) + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
                             } else {
                                 g.drawImage(image, cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
                             }
-                        } else {
+                        } else if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount + gameLevel.getObjectsChooserPanel().tilesetsCount) {
                             imageTrueHeight = (int)(cell.width() * test1);
                             boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
                             boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
@@ -367,11 +411,17 @@ public class EditorLevelPanel extends JPanel
                                 g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
                                         width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
                             }
+                        } else {
+                            height = image.getHeight(io);
+                            g.drawImage(image, cell.left, cell.bottom + getOffset(n, imageTrueHeight), cell.right, cell.top + getOffset(n, imageTrueHeight),
+                                    0, 0, height, height, this);
                         }
                     } else {
-                        g.setColor(new Color(1.0f, 0, 1.0f, 0.25f));
-                        g.setFont(g.getFont().deriveFont(40.0f));
-                        g.drawString(getTileString(gameLevel.values[i][t][0]), cell.left, cell.bottom);
+                        g.setColor(getTileColor(gameLevel.values[i][t][VALUES_ID]));
+                        g.fillRect(cell.left, cell.top, cell.width(), cell.height());
+                        g.setColor(new Color(0, 0, 0, 0.25f));
+                        g.setFont(g.getFont().deriveFont(25.0f));
+                        g.drawString(getTileString(gameLevel.values[i][t][VALUES_ID]), cell.left, cell.bottom);
                     }
                 }
             }
@@ -379,21 +429,67 @@ public class EditorLevelPanel extends JPanel
         g.setColor(Color.WHITE);
     }
 
+    /*final int PLATFORM_BLOCK_ID = 11;
+    final int CLIMBABLE_BLOCK_ID = 12;
+    final int SIGN_BLOCK_ID = 13;
+    final int FLOATING_PLATFORM_BLOCK_ID = 15;
+    final int IN_Z_LAYER_BLOCK_ID = 16;
+    final int OUT_Z_LAYER_BLOCK_ID = 17;
+    final int PORTAL_BLOCK_ID = 18;
+    final int HORIZONTAL_PLATFORM_BLOCK_ID = 19;
+    final int VERTICAL_PLATFORM_BLOCK_ID = 20;*/
+
     private String getTileString(int i) {
         switch (i) {
-            case 0: return "!S!";
-            case 1: return "FLR";
-            case 2: return "WAL";
-            case 3: return "SCE";
-            case 4: return "STA";
-            case 5: return "DYN";
-            case 6: return "H";
-            case 7: return "V";
-            case 8: return "O";
-            case 9: return ".";
-            case 10: return "!?!";
+            case SPAWN_POINT_BLOCK_ID: return "!S!";
+            case FLOOR_BLOCK_ID: return "";
+            case WALL_BLOCK_ID: return "";
+            case SCENERY_BLOCK_ID: return "SCE";
+            case STATIC_OBJECT_BLOCK_ID: return "STA";
+            case DYNAMIC_OBJECT_BLOCK_ID: return "DYN";
+            case RECTANGLE_DEATH_TRIGGER_BLOCK_ID: return "H";
+            case TRIANGLE_DEATH_TRIGGER_BLOCK_ID: return "V";
+            case CIRCLE_DEATH_TRIGGER_BLOCK_ID: return "O";
+            case POINT_DEATH_TRIGGER_BLOCK_ID: return ".";
+            case SAVE_POINT_BLOCK_ID: return "!?!";
+            case PLATFORM_BLOCK_ID: return "PLAT";
+            case CLIMBABLE_BLOCK_ID: return "";
+            case SIGN_BLOCK_ID: return "SGN";
+            case FLOATING_PLATFORM_BLOCK_ID: return "FLT";
+            case IN_Z_LAYER_BLOCK_ID: return "Z+";
+            case OUT_Z_LAYER_BLOCK_ID: return "Z-";
+            case PORTAL_BLOCK_ID: return "PRTL";
+            case HORIZONTAL_PLATFORM_BLOCK_ID: return "VPLT";
+            case VERTICAL_PLATFORM_BLOCK_ID: return "HPLT";
+
         }
         return "";
+    }
+
+    private Color getTileColor(int i) {
+        switch (i) {
+            case SPAWN_POINT_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
+            case FLOOR_BLOCK_ID: return new Color(0.5f, 0.5f, 0.5f, 0.2f);
+            case WALL_BLOCK_ID: return new Color(0, 0, 0, 0.2f);
+            case SCENERY_BLOCK_ID: return new Color(0, 1.0f, 0, 0.2f);
+            case STATIC_OBJECT_BLOCK_ID: return new Color(1.0f, 1.0f, 0, 0.2f);
+            case DYNAMIC_OBJECT_BLOCK_ID: return new Color(0.8f, 0.3f, 0, 0.2f);
+            case RECTANGLE_DEATH_TRIGGER_BLOCK_ID: return new Color(1.0f, 0, 0, 0.2f);
+            case TRIANGLE_DEATH_TRIGGER_BLOCK_ID: return new Color(1.0f, 0, 0, 0.2f);
+            case CIRCLE_DEATH_TRIGGER_BLOCK_ID: return new Color(1.0f, 0, 0, 0.2f);
+            case POINT_DEATH_TRIGGER_BLOCK_ID: return new Color(1.0f, 0, 0, 0.2f);
+            case SAVE_POINT_BLOCK_ID: return new Color(0, 0, 1.0f, 0.2f);
+            case PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
+            case CLIMBABLE_BLOCK_ID: return new Color(1.0f, 0.5f, 0.5f, 0.2f);
+            case SIGN_BLOCK_ID: return new Color(0.3f, 0.3f, 0, 0.2f);
+            case FLOATING_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
+            case IN_Z_LAYER_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
+            case OUT_Z_LAYER_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
+            case PORTAL_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
+            case HORIZONTAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
+            case VERTICAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
+        }
+        return new Color(1.0f, 1.0f, 1.0f, 0);
     }
 
     @Override

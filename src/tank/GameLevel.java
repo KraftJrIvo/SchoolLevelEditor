@@ -322,26 +322,32 @@ public class GameLevel {
             RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
             //fos.skipBytes((int)fos.length()-1);
             int size = fos.read();
-            fos.skipBytes(size + 7);
-            int x=999, y=999, z=999;
+            fos.skipBytes(size + 5);
+            int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            long read = size + 8;
+            long read = size + 6;
             do {
                 if (read >= fos.length()) break;
+                w = fos.read();
+                h = fos.read();
                 x = fos.read();
                 y = fos.read();
                 z = fos.read();
                 if (x != coordX || y != coordY || z != coordZ) {
-                    read += 3;
+                    read += 5;
                     fos.skipBytes(width*height*7);
                     read += width*height*7;
                 } else {
+                    width = w;
+                    height = h;
                     found = true;
                     break;
                 }
             } while (read < fos.length());
 
             if (!found) {
+                fos.write(width);
+                fos.write(height);
                 fos.write(coordX);
                 fos.write(coordY);
                 fos.write(coordZ);
@@ -405,10 +411,10 @@ public class GameLevel {
             fos.write(pm);
             fos.write(worldWidth);
             fos.write(worldHeight);
-            fos.write(width);
-            fos.write(height);
             fos.write(tileWidth);
             fos.write(tileHeight);
+            fos.write(width);
+            fos.write(height);
             fos.write(coordX);
             fos.write(coordY);
             fos.write(coordZ);
@@ -634,21 +640,21 @@ public class GameLevel {
         else platformMode = true;
         worldWidth = fInput.read();
         worldHeight = fInput.read();
-        width = fInput.read();
-        height = fInput.read();
         tileWidth = fInput.read();
         tileHeight = fInput.read();
 
-        int x=999, y=999, z=999;
+        int x=999, y=999, z=999, w=999, h=999;
         boolean found = false;
-        long read = 8+name.length();
+        long read = 6+name.length();
         do {
             if (read >= length) break;
+            w = fInput.read();
+            h = fInput.read();
             x = fInput.read();
             y = fInput.read();
             z = fInput.read();
             if (x != coordX || y != coordY || z != coordZ) {
-                read += 3;
+                read += 5;
                 fInput.skip(width*height*7);
                 read += width*height*7;
             } else {
@@ -658,6 +664,16 @@ public class GameLevel {
         } while (read < length);
 
         if (found) {
+            if (w == 999) {
+                width = fInput.read();
+            } else {
+                width = w;
+            }
+            if (h == 999) {
+                height = fInput.read();
+            } else {
+                height = h;
+            }
             if (x == 999) {
                 coordX = fInput.read();
             } else {
@@ -673,6 +689,7 @@ public class GameLevel {
             } else {
                 coordZ = z;
             }
+
             /*int endChecker = 0;
             while ((coordX != nextLevelX || coordY != nextLevelY)) {
                 fInput.skip(width*height*4);
