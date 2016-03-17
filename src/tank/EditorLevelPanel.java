@@ -66,6 +66,8 @@ public class EditorLevelPanel extends JPanel
     final int PORTAL_BLOCK_ID = 17;
     final int HORIZONTAL_PLATFORM_BLOCK_ID = 18;
     final int VERTICAL_PLATFORM_BLOCK_ID = 19;
+    final int WATER_BLOCK_ID = 20;
+    final int GOO_BLOCK_ID = 21;
 
     final int VALUES_ID = 0;
     final int VALUES_ANGLE = 1;
@@ -106,6 +108,14 @@ public class EditorLevelPanel extends JPanel
 
     public void addLevel(String fileName) {
         gameLevel.add(fileName);
+    }
+
+    public void removeLevel(String fileName) {
+        gameLevel.remove(fileName);
+    }
+
+    public void shiftLevel(String fileName) {
+        gameLevel.shift(fileName);
     }
 
     public void loadLevel(String fileName) {
@@ -368,7 +378,7 @@ public class EditorLevelPanel extends JPanel
                         image = gameLevel.getObjectsChooserPanel().getImage(0);
                     }
                     int width, height;
-                    if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
+                    if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
                         width = image.getWidth(io);
                         height = image.getHeight(io);
                     } else {
@@ -386,7 +396,7 @@ public class EditorLevelPanel extends JPanel
                             XOffset = gameLevel.values[i][t][VALUES_X_OFFSET]*(cell.width()/gameLevel.tileWidth);
                             YOffset = gameLevel.values[i][t][VALUES_Y_OFFSET]*(cell.height()/gameLevel.tileHeight);
                         }
-                        if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount) {
+                        if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
                             if (gameLevel.values[i][t][VALUES_ANGLE] == 1) {
                                 g.drawImage(rotate(image, 90), cell.left + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
                             } else if (gameLevel.values[i][t][VALUES_ANGLE] == 2) {
@@ -396,7 +406,7 @@ public class EditorLevelPanel extends JPanel
                             } else {
                                 g.drawImage(image, cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
                             }
-                        } else if (imageIndex < gameLevel.getObjectsChooserPanel().imagesCount + gameLevel.getObjectsChooserPanel().tilesetsCount) {
+                        } else if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 1) {
                             imageTrueHeight = (int)(cell.width() * test1);
                             boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
                             boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
@@ -461,7 +471,8 @@ public class EditorLevelPanel extends JPanel
             case PORTAL_BLOCK_ID: return "PRTL";
             case HORIZONTAL_PLATFORM_BLOCK_ID: return "VPLT";
             case VERTICAL_PLATFORM_BLOCK_ID: return "HPLT";
-
+            case WATER_BLOCK_ID: return "WWW";
+            case GOO_BLOCK_ID: return "GOO";
         }
         return "";
     }
@@ -488,6 +499,8 @@ public class EditorLevelPanel extends JPanel
             case PORTAL_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
             case HORIZONTAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
             case VERTICAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
+            case WATER_BLOCK_ID: return new Color(0.2f, 0.2f, 1.0f, 0.2f);
+            case GOO_BLOCK_ID: return new Color(0.2f, 1.0f, 0.2f, 0.2f);
         }
         return new Color(1.0f, 1.0f, 1.0f, 0);
     }
@@ -565,12 +578,14 @@ public class EditorLevelPanel extends JPanel
                 repaint();
             }
         } else if (mouseButton == MouseEvent.BUTTON2) {
-                shiftTiles(1);
+            //shiftTiles(1);
+            gameLevel.fillFloor(gameLevel.getObjectsChooserPanel().getSelectedObject());
+            repaint();
         }
     }
 
     public void mouseMoved(MouseEvent e) {
-        System.out.println(gameLevel.curType + " " + gameLevel.curAngle + " " + gameLevel.curXOffset + " " + gameLevel.curYOffset);
+        //System.out.println(gameLevel.curType + " " + gameLevel.curAngle + " " + gameLevel.curXOffset + " " + gameLevel.curYOffset);
     }
 
     public void setBackground(String name) {

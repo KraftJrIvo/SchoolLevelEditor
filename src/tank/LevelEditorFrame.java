@@ -33,8 +33,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * @author IVO
  */
 public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
-    ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\forest");
-    ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\forest");
+    //ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\platform_new");
+    ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
+    ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
 
     @Override
@@ -167,6 +168,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         jToolBar1 = new javax.swing.JToolBar();
         SaveButton = new javax.swing.JButton();
         LoadButton = new javax.swing.JButton();
+        RemoveButton = new javax.swing.JButton();
+        ShiftButton = new javax.swing.JButton();
         TestButton = new javax.swing.JButton();
         MenuTabbedPane = new javax.swing.JTabbedPane();
         LevelPropertiesPanel = new javax.swing.JPanel();
@@ -263,6 +266,28 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
             }
         });
         jToolBar1.add(TestButton);
+
+        RemoveButton.setText("Remove");
+        RemoveButton.setFocusable(false);
+        RemoveButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        RemoveButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        RemoveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                RemoveButtonActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(RemoveButton);
+
+        ShiftButton.setText("Shift");
+        ShiftButton.setFocusable(false);
+        ShiftButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        ShiftButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        ShiftButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ShiftButtonActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(ShiftButton);
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.PAGE_START);
 
@@ -578,7 +603,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     }
 
     private void Apply3ButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        objectCC.reload(NewDirTextField.getText());
+        //objectCC.reload(NewDirTextField.getText());
     }
 
     private void ApplyLevelPropertiesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
@@ -741,6 +766,50 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         }
     }
 
+    private void RemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        JFileChooser chooser = new JFileChooser();
+        URLClassLoader urlLoader =
+                (URLClassLoader)getClass().getClassLoader();
+        int urlID = 0;
+        for (int i=0; i<urlLoader.getURLs().length; ++i) {
+            if (urlLoader.getURLs()[i].toString().contains("images\\")) {
+                urlID = i;
+                break;
+            }
+        }
+        File file = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+objectCC.currentDir);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Tiled World", "tlw");
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
+        chooser.setFileFilter(filter);
+        int returnVal = chooser.showSaveDialog(this);
+        if(returnVal == JFileChooser.APPROVE_OPTION) {
+            editorLP.removeLevel(chooser.getSelectedFile().getAbsolutePath());
+        }
+    }
+
+    private void ShiftButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        JFileChooser chooser = new JFileChooser();
+        URLClassLoader urlLoader =
+                (URLClassLoader)getClass().getClassLoader();
+        int urlID = 0;
+        for (int i=0; i<urlLoader.getURLs().length; ++i) {
+            if (urlLoader.getURLs()[i].toString().contains("images\\")) {
+                urlID = i;
+                break;
+            }
+        }
+        File file = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+objectCC.currentDir);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Tiled World", "tlw");
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
+        chooser.setFileFilter(filter);
+        int returnVal = chooser.showSaveDialog(this);
+        if(returnVal == JFileChooser.APPROVE_OPTION) {
+            editorLP.shiftLevel(chooser.getSelectedFile().getAbsolutePath());
+        }
+    }
+
     private void LoadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadButtonActionPerformed
         JFileChooser chooser = new JFileChooser();
         URLClassLoader urlLoader =
@@ -819,6 +888,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JPanel AttributesPanel;
     private javax.swing.JButton SaveButton;
     private javax.swing.JButton TestButton;
+    private javax.swing.JButton RemoveButton;
+    private javax.swing.JButton ShiftButton;
     private javax.swing.JPanel ToolsPanel;
     private javax.swing.JTextField WidthTextField;
     private javax.swing.JTextField TileWidthTextField;

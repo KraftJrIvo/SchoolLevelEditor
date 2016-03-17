@@ -41,7 +41,12 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     private String[] imageNames = new String[10];
     //private Image[] images = new Image[10];
     ArrayList<Image> images, tilesets, animations;
+    ArrayList<String> names;
+    ArrayList<String> newNames;
+    ArrayList<Integer> namesLengths;
     ArrayList<Rect> imagesRect;
+    ArrayList<Integer> tileTypes;
+    ArrayList<Integer> tileIndices;
     //private Rect[] imagesRect = new Rect[10];
     private int selectedImage = 2;
     private Grid grid = new Grid(false);
@@ -76,10 +81,10 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     }
 
     public Image getImage(int index) {
-        if (index < 0) return null;
-        if (index >= imagesCount+tilesetsCount) return animations.get(index-imagesCount-tilesetsCount);
-        if (index >= imagesCount) return tilesets.get(index-imagesCount);
-        return images.get(index);
+        if (tileTypes.get(index) < 0) return null;
+        if (tileTypes.get(index) == 2) return animations.get(tileIndices.get(index));
+        if (tileTypes.get(index) == 1) return tilesets.get(tileIndices.get(index));
+        return images.get(tileIndices.get(index));
     }
 
     public Image getCurrentImage() {
@@ -137,7 +142,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         }
     }
 
-    public void reload(String newDir) {
+    /*public void reload(String newDir) {
         loaded = false;
         currentDir = newDir;
         imgColumnsCount = 4;
@@ -145,6 +150,9 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         images = new ArrayList<Image>();
         tilesets = new ArrayList<Image>();
         imagesRect = new ArrayList<Rect>();
+        names = new ArrayList<String>();
+        newNames = new ArrayList<String>();
+        namesLengths = new ArrayList<Integer>();
         URLClassLoader urlLoader =
                 (URLClassLoader)getClass().getClassLoader();
         int urlID = 0;
@@ -161,6 +169,8 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
                     images.add(image);
+                    names.add(child.getName().substring(0, child.getName().length() - 4));
+                    namesLengths.add(child.getName().length());
                 }
             }
             dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\tiles");
@@ -169,6 +179,8 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
                     tilesets.add(image);
+                    names.add(child.getName().substring(0, child.getName().length() - 4));
+                    namesLengths.add(child.getName().length());
                 }
             }
             dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\anim");
@@ -177,6 +189,8 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
                     animations.add(image);
+                    names.add(child.getName().substring(0, child.getName().length() - 4));
+                    namesLengths.add(child.getName().length());
                 }
             }
         }
@@ -188,7 +202,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         addMouseMotionListener((MouseMotionListener) this);
         loaded = true;
         calculateImagesRect();
-    }
+    }*/
 
     public ObjectsChooserPanel(String str) {
         imgColumnsCount = 4;
@@ -197,6 +211,13 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         tilesets = new ArrayList<Image>();
         animations = new ArrayList<Image>();
         imagesRect = new ArrayList<Rect>();
+        names = new ArrayList<String>();
+        namesLengths = new ArrayList<Integer>();
+        newNames = new ArrayList<String>();
+        tileTypes = new ArrayList<Integer>();
+        tileIndices = new ArrayList<Integer>();
+
+        //reload(str);
         //chooser.setCurrentDirectory();
         File dir = new File(str);
         File[] directoryListing = dir.listFiles();
@@ -204,7 +225,11 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             for (File child : directoryListing) {
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
+                    tileIndices.add(images.size());
                     images.add(image);
+                    names.add(child.getName().substring(0, child.getName().length() - 4));
+                    namesLengths.add(child.getName().length());
+                    tileTypes.add(0);
                 }
             }
             dir = new File(str+"\\tiles");
@@ -212,7 +237,11 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             for (File child : directoryListing) {
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
+                    tileIndices.add(tilesets.size());
                     tilesets.add(image);
+                    names.add("tiles\\" + child.getName().substring(0, child.getName().length() - 4));
+                    namesLengths.add(child.getName().length());
+                    tileTypes.add(1);
                 }
             }
             dir = new File(str+"\\anim");
@@ -221,7 +250,11 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 for (File child : directoryListing) {
                     Image image = getImage(this, child.getPath());
                     if (image != null) {
+                        tileIndices.add(animations.size());
                         animations.add(image);
+                        names.add("anim\\" + child.getName().substring(0, child.getName().length() - 4));
+                        namesLengths.add(child.getName().length());
+                        tileTypes.add(2);
                     }
                 }
             //}
@@ -234,6 +267,25 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         addMouseListener((MouseListener)this);
         addMouseMotionListener((MouseMotionListener)this);
         loaded = true;
+    }
+
+    public void updateTiles() {
+        ArrayList<String> preNames = new ArrayList<String>(names);
+        for (int i = 0; i < newNames.size(); ++i) {
+            int id = names.indexOf(newNames.get(i));
+            if (id >= 0 && id != i) {
+                int type = tileTypes.get(i);
+                int idx = tileIndices.get(i);
+                String name = preNames.get(i);
+                tileTypes.set(i, tileTypes.get(id));
+                tileIndices.set(i, tileIndices.get(id));
+                preNames.set(i, preNames.get(id));
+                tileTypes.set(id, type);
+                tileIndices.set(id, idx);
+                preNames.set(id, name);
+            }
+        }
+        names = preNames;
     }
 
     private Rect getImageRect(int index) {
@@ -265,7 +317,33 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
        if (grid.isNull()) return;
        g.setColor(Color.white);
        g.fillRect(0, 0, getWidth(), getHeight());
-       for (int imageID = 0; imageID< imagesCount +tilesetsCount+animationsCount; ++imageID) {
+        //g.setColor(Color.GRAY);
+        for (int i = 0; i < tileTypes.size(); ++i) {
+            if (i == selectedImage) {
+                g.setColor(Color.white);
+            } else {
+                g.setColor(Color.GRAY);
+            }
+            g.fillRect(imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).width(), imagesRect.get(i).height());
+            if (tileTypes.get(i) == 0) {
+                g.drawImage(images.get(tileIndices.get(i)), imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).width(), imagesRect.get(i).height(), this);
+            } else if (tileTypes.get(i) == 1) {
+                int width = tilesets.get(tileIndices.get(i)).getWidth(this)/3;
+                int height = tilesets.get(tileIndices.get(i)).getHeight(this)/4;
+                g.drawImage(tilesets.get(tileIndices.get(i)), imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom, 0, 0, width, height, this);
+            } else if (tileTypes.get(i) == 2) {
+                int width = animations.get(tileIndices.get(i)).getHeight(this);
+                int height = width;
+                //boolean left =
+                g.drawImage(animations.get(tileIndices.get(i)), imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom, 0, 0, width, height, this);
+            }
+            if (i == selectedImage)
+                g.setColor(Color.red);
+            else
+                g.setColor(Color.black);
+            g.drawRect(imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).width(), imagesRect.get(i).height());
+        }
+       /*for (int imageID = 0; imageID< imagesCount +tilesetsCount+animationsCount; ++imageID) {
             if (imageID == selectedImage)
                g.setColor(Color.white);
             else
@@ -293,7 +371,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             else
                 g.setColor(Color.black);
             g.drawRect(imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).width(), imagesRect.get(imageID).height());
-       }
+       }*/
     }
 
 

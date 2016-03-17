@@ -145,6 +145,14 @@ public class GameLevel {
         coordZ = z;
     }
 
+    public void fillFloor(int type) {
+        for (int y=0; y<getHeight(); ++y){
+            for (int x=0; x<getWidth(); ++x){
+                content0[x][y] = type;
+                if (values[x][y][0] == -1) values[x][y][0] = 1;
+            }
+        }
+    }
 
     public Image getPlatformDecorationImage(Platform platform, int x, int y) {
         if (platform == null) return null;
@@ -321,11 +329,44 @@ public class GameLevel {
         try {
             RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
             //fos.skipBytes((int)fos.length()-1);
+            String nameTemp;
+            long read = 1;
+            int namesCount = fos.read();
+            //getObjectsChooserPanel().newNames.clear();
+            int nameSize;
+            for (int i =0; i < namesCount; ++i) {
+                nameSize = fos.read();
+                byte[] buff = new byte[nameSize];
+                fos.read(buff);
+                read += nameSize + 1;
+                //getObjectsChooserPanel().newNames.add(new String(buff));
+            }
+            //getObjectsChooserPanel().updateTiles();
+            byte[] buff = new byte[(int)(fos.length() - read)];
+            fos.read(buff);
+            fos.seek(0);
+            fos.write(getObjectsChooserPanel().names.size());
+            for (int i =0; i < getObjectsChooserPanel().names.size(); ++i) {
+                fos.write(getObjectsChooserPanel().names.get(i).length());
+                fos.write(getObjectsChooserPanel().names.get(i).getBytes(), 0, getObjectsChooserPanel().names.get(i).length());
+            }
+            fos.write(buff);
+            fos.seek(0);
+            namesCount = fos.read();
+            getObjectsChooserPanel().newNames.clear();
+            for (int i =0; i < namesCount; ++i) {
+                nameSize = fos.read();
+                byte[] buff2 = new byte[nameSize];
+                fos.read(buff2);
+                read += nameSize + 1;
+                getObjectsChooserPanel().newNames.add(new String(buff2));
+            }
+            getObjectsChooserPanel().updateTiles();
             int size = fos.read();
             fos.skipBytes(size + 5);
             int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            long read = size + 6;
+            read = size + 6;
             do {
                 if (read >= fos.length()) break;
                 w = fos.read();
@@ -335,8 +376,8 @@ public class GameLevel {
                 z = fos.read();
                 if (x != coordX || y != coordY || z != coordZ) {
                     read += 5;
-                    fos.skipBytes(width*height*7);
-                    read += width*height*7;
+                    fos.skipBytes(w*h*7);
+                    read += w*h*7;
                 } else {
                     width = w;
                     height = h;
@@ -381,6 +422,149 @@ public class GameLevel {
         }
     }
 
+    public void shift(String fileName) {
+
+        try {
+            RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
+            //fos.skipBytes((int)fos.length()-1);
+            String nameTemp;
+            int namesCount = fos.read();
+            getObjectsChooserPanel().newNames.clear();
+            int nameSize;
+            for (int i =0; i < namesCount; ++i) {
+                nameSize = fos.read();
+                byte[] buff = new byte[nameSize];
+                fos.read(buff);
+                getObjectsChooserPanel().newNames.add(new String(buff));
+            }
+            getObjectsChooserPanel().updateTiles();
+            int size = fos.read();
+            fos.skipBytes(size + 5);
+            int x=999, y=999, z=999, w=999, h=999;
+            boolean found = false;
+            long read = size + 6;
+            do {
+                if (w == -1) break;
+                w = fos.read();
+                h = fos.read();
+                x = fos.read();
+                y = fos.read();
+                z = fos.read();
+                width = w;
+                height = h;
+                int c;
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer()-1);
+                        if (c < 250 && ((curAngle == 1 && c >= objectsChooserPanel.imagesCount) || (curAngle == 2 && c >= objectsChooserPanel.imagesCount + objectsChooserPanel.tilesetsCount) || curAngle == 0)) {
+                            fos.write(c+curType);
+                        } else {
+                            fos.write(c);
+                        }
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer() - 1);
+                        if (c < 250 && ((curAngle == 1 && c >= objectsChooserPanel.imagesCount) || (curAngle == 2 && c >= objectsChooserPanel.imagesCount + objectsChooserPanel.tilesetsCount) || curAngle == 0)) {
+                            fos.write(c+curType);
+                        } else {
+                            fos.write(c);
+                        }
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer() - 1);
+                        if (c < 250 && ((curAngle == 1 && c >= objectsChooserPanel.imagesCount) || (curAngle == 2 && c >= objectsChooserPanel.imagesCount + objectsChooserPanel.tilesetsCount) || curAngle == 0)) {
+                            fos.write(c+curType);
+                        } else {
+                            fos.write(c);
+                        }
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer()-1);
+                        fos.write(c);
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer()-1);
+                        fos.write(c);
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer()-1);
+                        fos.write(c);
+                        c = fos.read();
+                        fos.seek(fos.getFilePointer()-1);
+                        fos.write(c);
+                    }
+                }
+            } while (read < fos.length());
+
+            //fos.write(254);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void remove(String fileName) {
+
+        try {
+            RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
+            //fos.skipBytes((int)fos.length()-1);
+            String nameTemp;
+            int namesCount = fos.read();
+            getObjectsChooserPanel().newNames.clear();
+            int nameSize;
+            for (int i =0; i < namesCount; ++i) {
+                nameSize = fos.read();
+                byte[] buff = new byte[nameSize];
+                fos.read(buff);
+                getObjectsChooserPanel().newNames.add(new String(buff));
+            }
+            getObjectsChooserPanel().updateTiles();
+            int size = fos.read();
+            fos.skipBytes(size + 5);
+            int x=999, y=999, z=999, w=999, h=999;
+            boolean found = false;
+            long read = size + 6;
+            do {
+                if (read >= fos.length()) break;
+                w = fos.read();
+                h = fos.read();
+                x = fos.read();
+                y = fos.read();
+                z = fos.read();
+                if (x != coordX || y != coordY || z != coordZ) {
+                    read += 5;
+                    fos.skipBytes(w*h*7);
+                    read += w*h*7;
+                } else {
+                    width = w;
+                    height = h;
+                    found = true;
+                    break;
+                }
+            } while (read < fos.length());
+
+            if (found) {
+                fos.seek(fos.getFilePointer()-5);
+                fos.write(w);
+                fos.write(h);
+                fos.write(-10);
+                fos.write(-10);
+                fos.write(-10);
+            }
+
+            //fos.write(254);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void save(String fileName) {
 
         FileOutputStream fos = null;
@@ -402,6 +586,11 @@ public class GameLevel {
 
         String str = "Tank Game v1.4\n";
         try {
+            fos.write(getObjectsChooserPanel().names.size());
+            for (int i =0; i < getObjectsChooserPanel().names.size(); ++i) {
+                fos.write(getObjectsChooserPanel().names.get(i).length());
+                fos.write(getObjectsChooserPanel().names.get(i).getBytes(), 0, getObjectsChooserPanel().names.get(i).length());
+            }
             //zos.write(str.getBytes(), 0, str.getBytes().length);
             fos.write(name.length());
             fos.write(name.getBytes(), 0, name.getBytes().length);
@@ -629,7 +818,18 @@ public class GameLevel {
     private boolean loadFromInputStream(InputStream fInput, long length) throws IOException {
         tempPlatformDecorationPaletteSize = -1;
         platforms.clear();
-        String str;
+
+        String nameTemp;
+        /*int namesCount = fInput.read();
+        getObjectsChooserPanel().newNames.clear();
+        int nameSize;
+        for (int i =0; i < namesCount; ++i) {
+            nameSize = fInput.read();
+            byte[] buff = new byte[nameSize];
+            fInput.read(buff);
+            getObjectsChooserPanel().newNames.add(new String(buff));
+        }
+        getObjectsChooserPanel().updateTiles();*/
         int size;
         size = fInput.read();
         byte[] buff = new byte[size];
@@ -655,8 +855,8 @@ public class GameLevel {
             z = fInput.read();
             if (x != coordX || y != coordY || z != coordZ) {
                 read += 5;
-                fInput.skip(width*height*7);
-                read += width*height*7;
+                fInput.skip(w*h*7);
+                read += w*h*7;
             } else {
                 found = true;
                 break;
