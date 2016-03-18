@@ -820,7 +820,7 @@ public class GameLevel {
         platforms.clear();
 
         String nameTemp;
-        /*int namesCount = fInput.read();
+        int namesCount = fInput.read();
         getObjectsChooserPanel().newNames.clear();
         int nameSize;
         for (int i =0; i < namesCount; ++i) {
@@ -829,7 +829,7 @@ public class GameLevel {
             fInput.read(buff);
             getObjectsChooserPanel().newNames.add(new String(buff));
         }
-        getObjectsChooserPanel().updateTiles();*/
+        getObjectsChooserPanel().updateTiles();
         int size;
         size = fInput.read();
         byte[] buff = new byte[size];

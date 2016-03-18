@@ -271,6 +271,14 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
 
     public void updateTiles() {
         ArrayList<String> preNames = new ArrayList<String>(names);
+        ArrayList<Integer> preTileIndices = new ArrayList<Integer>(tileIndices);
+        ArrayList<Integer> preTileTypes = new ArrayList<Integer>(tileTypes);
+        for (int i = 0; i < newNames.size(); ++i) {
+            preTileTypes.set(i, tileTypes.get(names.indexOf(newNames.get(i))));
+            preTileIndices.set(i, tileIndices.get(names.indexOf(newNames.get(i))));
+            preNames.set(i, newNames.get(i));
+        }
+        /*ArrayList<String> preNames = new ArrayList<String>(names);
         for (int i = 0; i < newNames.size(); ++i) {
             int id = names.indexOf(newNames.get(i));
             if (id >= 0 && id != i) {
@@ -284,7 +292,9 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 tileIndices.set(id, idx);
                 preNames.set(id, name);
             }
-        }
+        }*/
+        tileIndices = preTileIndices;
+        tileTypes = preTileTypes;
         names = preNames;
     }
 
