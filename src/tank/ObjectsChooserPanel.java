@@ -206,7 +206,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
 
     public ObjectsChooserPanel(String str) {
         imgColumnsCount = 4;
-        imgLinesCount = 10;
+        imgLinesCount = 20;
         images = new ArrayList<Image>();
         tilesets = new ArrayList<Image>();
         animations = new ArrayList<Image>();
@@ -273,10 +273,25 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         ArrayList<String> preNames = new ArrayList<String>(names);
         ArrayList<Integer> preTileIndices = new ArrayList<Integer>(tileIndices);
         ArrayList<Integer> preTileTypes = new ArrayList<Integer>(tileTypes);
+        ArrayList<String> unusedNames = new ArrayList<String>();
+        ArrayList<Integer> unusedTypes = new ArrayList<Integer>();
+        ArrayList<Integer> unusedIndices = new ArrayList<Integer>();
+        for (int i = 0; i < names.size(); ++i) {
+            if (!newNames.contains(names.get(i))) {
+                unusedNames.add(names.get(i));
+                unusedTypes.add(tileTypes.get(i));
+                unusedIndices.add(tileIndices.get(i));
+            }
+        }
         for (int i = 0; i < newNames.size(); ++i) {
             preTileTypes.set(i, tileTypes.get(names.indexOf(newNames.get(i))));
             preTileIndices.set(i, tileIndices.get(names.indexOf(newNames.get(i))));
             preNames.set(i, newNames.get(i));
+        }
+        for (int i = 0; i < unusedNames.size(); ++i) {
+            preTileTypes.set(newNames.size() + i, unusedTypes.get(i));
+            preTileIndices.set(newNames.size() + i, unusedIndices.get(i));
+            preNames.set(newNames.size() + i, unusedNames.get(i));
         }
         /*ArrayList<String> preNames = new ArrayList<String>(names);
         for (int i = 0; i < newNames.size(); ++i) {

@@ -68,6 +68,7 @@ public class EditorLevelPanel extends JPanel
     final int VERTICAL_PLATFORM_BLOCK_ID = 19;
     final int WATER_BLOCK_ID = 20;
     final int GOO_BLOCK_ID = 21;
+    final int CHARACTER_ID = 200;
 
     final int VALUES_ID = 0;
     final int VALUES_ANGLE = 1;
@@ -377,15 +378,18 @@ public class EditorLevelPanel extends JPanel
                     } else {
                         image = gameLevel.getObjectsChooserPanel().getImage(0);
                     }
-                    int width, height;
-                    if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
-                        width = image.getWidth(io);
-                        height = image.getHeight(io);
-                    } else {
-                        width = image.getWidth(io)/3;
-                        height = image.getHeight(io)/4;
+                    int width = 0, height = 0;
+                    float test1 = 0;
+                    if (n != 3) {
+                        if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
+                            width = image.getWidth(io);
+                            height = image.getHeight(io);
+                        } else {
+                            width = image.getWidth(io)/3;
+                            height = image.getHeight(io)/4;
+                        }
+                        test1 = (float)height/(float)width;
                     }
-                    float test1 = (float)height/(float)width;
                     int imageTrueWidth = (int)(image.getWidth(this)*cell.width()/gameLevel.tileWidth);
                     int imageTrueHeight = (int)(image.getHeight(this)*cell.height()/gameLevel.tileHeight);
                     //g.drawImage(image, cell.left, cell.bottom-imageTrueHeight+getOffset(n), cell.width(), imageTrueHeight, io);
@@ -408,10 +412,10 @@ public class EditorLevelPanel extends JPanel
                             }
                         } else if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 1) {
                             imageTrueHeight = (int)(cell.width() * test1);
-                            boolean left = (i > 0 && ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
-                            boolean right = (i < getLevelWidth()-1 && ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
-                            boolean up = (t > 0 && ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.values[i][t-1][0] == imageIndex && n == 3)));
-                            boolean down = (t < getLevelHeight()-1 && ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.values[i][t+1][0] == imageIndex && n == 3)));
+                            boolean left = (i == 0 || ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
+                            boolean right = (i == getLevelWidth()-1 || ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
+                            boolean up = (t == 0 || ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.values[i][t-1][0] == imageIndex && n == 3)));
+                            boolean down = (t == getLevelHeight()-1 || ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.values[i][t+1][0] == imageIndex && n == 3)));
                             int tileX = getRightTile(left, right, up, down).x;
                             int tileY = getRightTile(left, right, up, down).y;
                             if (getTileInverted(left, right, up, down)) {
@@ -474,6 +478,9 @@ public class EditorLevelPanel extends JPanel
             case WATER_BLOCK_ID: return "WWW";
             case GOO_BLOCK_ID: return "GOO";
         }
+        if (i >= 200) {
+            return "ch" + (i - 200);
+        }
         return "";
     }
 
@@ -501,6 +508,9 @@ public class EditorLevelPanel extends JPanel
             case VERTICAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
             case WATER_BLOCK_ID: return new Color(0.2f, 0.2f, 1.0f, 0.2f);
             case GOO_BLOCK_ID: return new Color(0.2f, 1.0f, 0.2f, 0.2f);
+        }
+        if (i >= 200) {
+            return new Color(0.7f, 0.4f, 0.0f, 0);
         }
         return new Color(1.0f, 1.0f, 1.0f, 0);
     }

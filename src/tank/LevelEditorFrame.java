@@ -33,7 +33,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * @author IVO
  */
 public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
-    //ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\platform_new");
+    //ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all_platform");
     ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
