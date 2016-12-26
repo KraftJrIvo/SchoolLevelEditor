@@ -33,6 +33,8 @@ public class GameLevel {
     //private int height = 32;
     private int width = 16;
     private int height = 16;
+    public int chunkWidth = 4;
+    public int chunkHeight = 8;
     public int tileWidth = 32, tileHeight = 16;
     boolean platformMode = false;
     private boolean changed = false;
@@ -132,6 +134,11 @@ public class GameLevel {
                 }
             }
         }
+    }
+
+    public void setChunkSize(int width, int height) {
+        chunkWidth = width;
+        chunkHeight = height;
     }
 
     public void setWorldSize(int width, int height) {
@@ -363,10 +370,10 @@ public class GameLevel {
             }
             getObjectsChooserPanel().updateTiles();
             int size = fos.read();
-            fos.skipBytes(size + 5);
+            fos.skipBytes(size + 7);
             int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            read = size + 6;
+            read = size + 8;
             do {
                 if (read >= fos.length()) break;
                 w = fos.read();
@@ -439,10 +446,10 @@ public class GameLevel {
             }
             getObjectsChooserPanel().updateTiles();
             int size = fos.read();
-            fos.skipBytes(size + 5);
+            fos.skipBytes(size + 7);
             int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            long read = size + 6;
+            long read = size + 8;
             do {
                 if (w == -1) break;
                 w = fos.read();
@@ -527,10 +534,10 @@ public class GameLevel {
             }
             getObjectsChooserPanel().updateTiles();
             int size = fos.read();
-            fos.skipBytes(size + 5);
+            fos.skipBytes(size + 7);
             int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            long read = size + 6;
+            long read = size + 8;
             do {
                 if (read >= fos.length()) break;
                 w = fos.read();
@@ -602,6 +609,8 @@ public class GameLevel {
             fos.write(worldHeight);
             fos.write(tileWidth);
             fos.write(tileHeight);
+            fos.write(chunkWidth);
+            fos.write(chunkHeight);
             fos.write(width);
             fos.write(height);
             fos.write(coordX);
@@ -842,7 +851,8 @@ public class GameLevel {
         worldHeight = fInput.read();
         tileWidth = fInput.read();
         tileHeight = fInput.read();
-
+        chunkWidth = fInput.read();
+        chunkHeight = fInput.read();
         int x=999, y=999, z=999, w=999, h=999;
         boolean found = false;
         long read = 6+name.length();

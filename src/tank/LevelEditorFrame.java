@@ -34,7 +34,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
     //ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all_platform");
-    ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
+    ObjectsChooserPanel objectCC;// = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
 
@@ -91,6 +91,15 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
 
 
     public LevelEditorFrame() {
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("Select world resources directory!");
+        chooser.showOpenDialog(this);
+        String path = chooser.getSelectedFile().getAbsolutePath();
+        objectCC = new ObjectsChooserPanel(path);
+
         initComponents();
         initPanels();
 
@@ -179,6 +188,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         AreaHeightLabel = new javax.swing.JLabel();
         TileWidthLabel = new javax.swing.JLabel();
         TileHeightLabel = new javax.swing.JLabel();
+        ChunkWidthLabel = new javax.swing.JLabel();
+        ChunkHeightLabel = new javax.swing.JLabel();
         PlatformModeLabel = new javax.swing.JLabel();
         WorldWidthLabel = new javax.swing.JLabel();
         WorldHeightLabel = new javax.swing.JLabel();
@@ -198,6 +209,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         NewDirTextField = new javax.swing.JTextField();
         WorldWidthTextField = new javax.swing.JTextField();
         WorldHeightTextField = new javax.swing.JTextField();
+        ChunkWidthTextField = new javax.swing.JTextField();
+        ChunkHeightTextField = new javax.swing.JTextField();
         CoordXTextField = new javax.swing.JTextField();
         CoordYTextField = new javax.swing.JTextField();
         CoordZTextField = new javax.swing.JTextField();
@@ -298,6 +311,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         AreaHeightLabel.setText("Area Height:");
         TileWidthLabel.setText("Tile Width:");
         TileHeightLabel.setText("Tile Height:");
+        ChunkWidthLabel.setText("Chunk Width:");
+        ChunkHeightLabel.setText("Chunk Height:");
         PlatformModeLabel.setText("Platform Mode:");
         WorldWidthLabel.setText("World Width:");
         WorldHeightLabel.setText("World Height:");
@@ -360,6 +375,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                                 .addComponent(AreaHeightLabel)
                                                 .addComponent(TileWidthLabel)
                                                 .addComponent(TileHeightLabel)
+                                                .addComponent(ChunkWidthLabel)
+                                                .addComponent(ChunkHeightLabel)
                                                 .addComponent(PlatformModeLabel)
                                                 .addComponent(WorldWidthLabel)
                                                 .addComponent(WorldHeightLabel)
@@ -378,6 +395,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                                 //.addComponent(PlayerWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(TileHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(TileWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(ChunkHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(ChunkWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(WidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(WorldHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -425,6 +444,14 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                 .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(TileHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(TileHeightLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(ChunkWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(ChunkWidthLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(ChunkHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(ChunkHeightLabel))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(PlatformModeCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -635,6 +662,18 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
             numberHeight = 0;
         }
         try {
+            i = new Integer(ChunkWidthTextField.getText());
+            editorLP.gameLevel.chunkWidth = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.chunkWidth =  0;
+        }
+        try {
+            i = new Integer(ChunkHeightTextField.getText());
+            editorLP.gameLevel.chunkHeight = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.chunkHeight = 0;
+        }
+        try {
             i = new Integer(PlayerWidthTextField.getText());
             numberWidth2 = i.intValue();
         } catch(NumberFormatException ex) {
@@ -708,6 +747,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         HeightTextField.setText("" + editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
+        ChunkWidthTextField.setText(""+editorLP.gameLevel.chunkWidth);
+        ChunkHeightTextField.setText(""+editorLP.gameLevel.chunkHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
         WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
@@ -835,6 +876,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         HeightTextField.setText("" + editorLP.getLevelHeight());
         TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
         TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
+        ChunkWidthTextField.setText(""+editorLP.gameLevel.chunkWidth);
+        ChunkHeightTextField.setText(""+editorLP.gameLevel.chunkHeight);
         PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
         WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
         WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
@@ -871,6 +914,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JLabel AreaHeightLabel;
     private javax.swing.JLabel TileWidthLabel;
     private javax.swing.JLabel TileHeightLabel;
+    private javax.swing.JLabel ChunkWidthLabel;
+    private javax.swing.JLabel ChunkHeightLabel;
     private javax.swing.JLabel PlatformModeLabel;
     private javax.swing.JLabel WorldWidthLabel;
     private javax.swing.JLabel WorldHeightLabel;
@@ -896,6 +941,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JTextField PlayerWidthTextField;
     private javax.swing.JTextField WorldWidthTextField;
     private javax.swing.JTextField WorldHeightTextField;
+    private javax.swing.JTextField ChunkWidthTextField;
+    private javax.swing.JTextField ChunkHeightTextField;
     private javax.swing.JTextField CoordXTextField;
     private javax.swing.JTextField CoordYTextField;
     private javax.swing.JTextField CoordZTextField;
