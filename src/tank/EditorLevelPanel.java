@@ -401,7 +401,7 @@ public class EditorLevelPanel extends JPanel
                             YOffset = gameLevel.values[i][t][VALUES_Y_OFFSET]*(cell.height()/gameLevel.tileHeight);
                         }
                         if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
-                            if (gameLevel.values[i][t][VALUES_ANGLE] == 1) {
+                            if (gameLevel.values[i][t][VALUES_ANGLE] == 1 && gameLevel.values[i][t][VALUES_ID] < 200) {
                                 g.drawImage(rotate(image, 90), cell.left + XOffset, cell.bottom - cell.height()/2+imageTrueHeight/2 - imageTrueHeight + getOffset(n, imageTrueHeight) + YOffset, imageTrueHeight, imageTrueWidth, io);
                             } else if (gameLevel.values[i][t][VALUES_ANGLE] == 2) {
                                 g.drawImage(rotate(image, 180), cell.left+cell.width()/2-imageTrueWidth/2 + XOffset, cell.top + getOffset(n, imageTrueHeight) + YOffset, imageTrueWidth, imageTrueHeight, io);
@@ -431,11 +431,11 @@ public class EditorLevelPanel extends JPanel
                                     0, 0, height, height, this);
                         }
                     } else {
-                        g.setColor(getTileColor(gameLevel.values[i][t][VALUES_ID]));
+                        g.setColor(getTileColor(gameLevel.values[i][t][VALUES_ID], gameLevel.values[i][t][VALUES_ANGLE]));
                         g.fillRect(cell.left, cell.top, cell.width(), cell.height());
                         g.setColor(new Color(0, 0, 0, 0.25f));
                         g.setFont(g.getFont().deriveFont(25.0f));
-                        g.drawString(getTileString(gameLevel.values[i][t][VALUES_ID]), cell.left, cell.bottom);
+                        g.drawString(getTileString(gameLevel.values[i][t][VALUES_ID], gameLevel.values[i][t][VALUES_ANGLE]), cell.left, cell.bottom);
                     }
                 }
             }
@@ -453,7 +453,7 @@ public class EditorLevelPanel extends JPanel
     final int HORIZONTAL_PLATFORM_BLOCK_ID = 19;
     final int VERTICAL_PLATFORM_BLOCK_ID = 20;*/
 
-    private String getTileString(int i) {
+    private String getTileString(int i, int angle) {
         switch (i) {
             case SPAWN_POINT_BLOCK_ID: return "!S!";
             case FLOOR_BLOCK_ID: return "";
@@ -479,12 +479,15 @@ public class EditorLevelPanel extends JPanel
             case GOO_BLOCK_ID: return "GOO";
         }
         if (i >= 200) {
-            return "ch" + (i - 200);
+            if (angle == 0) {
+                return "ch" + (i - 200);
+            }
+            return "it" + (i - 200);
         }
         return "";
     }
 
-    private Color getTileColor(int i) {
+    private Color getTileColor(int i, int angle) {
         switch (i) {
             case SPAWN_POINT_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
             case FLOOR_BLOCK_ID: return new Color(0.5f, 0.5f, 0.5f, 0.2f);
@@ -510,6 +513,9 @@ public class EditorLevelPanel extends JPanel
             case GOO_BLOCK_ID: return new Color(0.2f, 1.0f, 0.2f, 0.2f);
         }
         if (i >= 200) {
+            if (angle == 0) {
+                return new Color(0.7f, 0.4f, 0.0f, 0);
+            }
             return new Color(0.7f, 0.4f, 0.0f, 0);
         }
         return new Color(1.0f, 1.0f, 1.0f, 0);
