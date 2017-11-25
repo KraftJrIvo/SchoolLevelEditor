@@ -74,6 +74,8 @@ public class EditorLevelPanel extends JPanel
     final int VALUES_ANGLE = 1;
     final int VALUES_X_OFFSET = 2;
     final int VALUES_Y_OFFSET = 3;
+
+    Grid.Point curCell = null;
 /*
     case 0: return "!S!";
     case 1: return "FLR";
@@ -397,8 +399,8 @@ public class EditorLevelPanel extends JPanel
                         int XOffset = 0;
                         int YOffset = 0;
                         if (n == 2) {
-                            XOffset = gameLevel.values[i][t][VALUES_X_OFFSET]*(cell.width()/gameLevel.tileWidth);
-                            YOffset = gameLevel.values[i][t][VALUES_Y_OFFSET]*(cell.height()/gameLevel.tileHeight);
+                            //XOffset = gameLevel.values[i][t][VALUES_X_OFFSET]*(cell.width()/gameLevel.tileWidth);
+                            //YOffset = gameLevel.values[i][t][VALUES_Y_OFFSET]*(cell.height()/gameLevel.tileHeight);
                         }
                         if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
                             if (gameLevel.values[i][t][VALUES_ANGLE] == 1 && gameLevel.values[i][t][VALUES_ID] < 200) {
@@ -419,10 +421,10 @@ public class EditorLevelPanel extends JPanel
                             int tileX = getRightTile(left, right, up, down).x;
                             int tileY = getRightTile(left, right, up, down).y;
                             if (getTileInverted(left, right, up, down)) {
-                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
                                         width*tileX+width, height*tileY, width*tileX, height*tileY+height, this);
                             } else {
-                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight), cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
                                         width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
                             }
                         } else {
@@ -554,6 +556,22 @@ public class EditorLevelPanel extends JPanel
         if (gameLevel.getPlatformCount() > 0)
             g.drawImage(platformsBufferedImage, 0, 0, platformsBufferedImage.getWidth(),
                     platformsBufferedImage.getHeight(), this);
+        if (selectedRow != -1 && selectedColumn != -1) {
+            g.setColor(Color.BLACK);
+            g.drawString("Layer1: " + gameLevel.content0[selectedColumn][selectedRow],10,10*2);
+            g.drawString("Layer2: " + gameLevel.content1[selectedColumn][selectedRow],10,20*2);
+            g.drawString("Layer3: " + gameLevel.content2[selectedColumn][selectedRow],10,30*2);
+            g.drawString("Type: " + gameLevel.values[selectedColumn][selectedRow][0],10,40*2);
+            g.drawString("X: " + gameLevel.values[selectedColumn][selectedRow][2],10,50*2);
+            g.drawString("Y: " + gameLevel.values[selectedColumn][selectedRow][3],10,60*2);
+            g.drawString("W: " + gameLevel.values[selectedColumn][selectedRow][4],10,70*2);
+            g.drawString("H: " + gameLevel.values[selectedColumn][selectedRow][5],10,80*2);
+            g.drawString("Orientation: " + gameLevel.values[selectedColumn][selectedRow][1],10,90*2);
+            g.setColor(new Color(1.0f, 0, 0, 0.2f));
+            if (curCell != null) {
+                g.fillRect(grid.getLineX(curCell.x), grid.getLineY(curCell.y), grid.getLineX(curCell.x + 1) - grid.getLineX(curCell.x), grid.getLineY(curCell.y + 1) - grid.getLineY(curCell.y));
+            }
+        }
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -601,7 +619,10 @@ public class EditorLevelPanel extends JPanel
     }
 
     public void mouseMoved(MouseEvent e) {
-        //System.out.println(gameLevel.curType + " " + gameLevel.curAngle + " " + gameLevel.curXOffset + " " + gameLevel.curYOffset);
+        curCell = grid.getCell(e.getX(), e.getY());
+        selectedRow = curCell.y;
+        selectedColumn = curCell.x;
+        repaint();
     }
 
     public void setBackground(String name) {

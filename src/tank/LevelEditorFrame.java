@@ -198,10 +198,14 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CurZLabel = new javax.swing.JLabel();
         OffsetXLabel = new javax.swing.JLabel();
         OffsetYLabel = new javax.swing.JLabel();
+        ObjectWidthLabel = new javax.swing.JLabel();
+        ObjectHeightLabel = new javax.swing.JLabel();
         AngleLabel = new javax.swing.JLabel();
         TypeLabel = new javax.swing.JLabel();
         OffsetXTextField = new javax.swing.JTextField();
         OffsetYTextField = new javax.swing.JTextField();
+        ObjectWidthTextField = new javax.swing.JTextField();
+        ObjectHeightTextField = new javax.swing.JTextField();
         AngleTextField = new javax.swing.JTextField();
         TypeTextField = new javax.swing.JTextField();
         WidthTextField = new javax.swing.JTextField();
@@ -321,6 +325,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CurZLabel.setText("Current Area Z:");
         OffsetXLabel.setText("X Offset:");
         OffsetYLabel.setText("Y Offset:");
+        ObjectWidthLabel.setText("Object Width:");
+        ObjectHeightLabel.setText("Object Height:");
         AngleLabel.setText("Orientation:");
         TypeLabel.setText("Type:");
 
@@ -385,6 +391,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                                 .addComponent(CurZLabel)
                                                 .addComponent(OffsetXLabel)
                                                 .addComponent(OffsetYLabel)
+                                                .addComponent(ObjectWidthLabel)
+                                                .addComponent(ObjectHeightLabel)
                                                 .addComponent(TypeLabel)
                                                 .addComponent(AngleLabel)
                                 )
@@ -407,6 +415,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                         .addComponent(ApplyLevelPropertiesButton, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(OffsetXTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(OffsetYTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(ObjectWidthTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(ObjectHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(TypeTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(AngleTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                                 //.addComponent(Apply2Button, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -506,6 +516,14 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                 .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(OffsetYTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(OffsetYLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(ObjectWidthTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(ObjectWidthLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(ObjectHeightTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(ObjectHeightLabel))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(TypeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -729,6 +747,18 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
             editorLP.gameLevel.curYOffset = 0;
         }
         try {
+            i = new Integer(ObjectWidthTextField.getText());
+            editorLP.gameLevel.curObjectWidth = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curObjectWidth = 0;
+        }
+        try {
+            i = new Integer(ObjectHeightTextField.getText());
+            editorLP.gameLevel.curObjectHeight = i.intValue();
+        } catch(NumberFormatException ex) {
+            editorLP.gameLevel.curObjectHeight = 0;
+        }
+        try {
             i = new Integer(TypeTextField.getText());
             editorLP.gameLevel.curType = i.intValue();
         } catch(NumberFormatException ex) {
@@ -924,6 +954,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JLabel CurZLabel;
     private javax.swing.JLabel OffsetXLabel;
     private javax.swing.JLabel OffsetYLabel;
+    private javax.swing.JLabel ObjectWidthLabel;
+    private javax.swing.JLabel ObjectHeightLabel;
     private javax.swing.JLabel AngleLabel;
     private javax.swing.JLabel TypeLabel;
     private javax.swing.JTextField NameTextField;
@@ -948,10 +980,12 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JTextField CoordZTextField;
     private javax.swing.JTextField CoordX2TextField;
     private javax.swing.JTextField CoordY2TextField;
-    private javax.swing.JTextField OffsetXTextField;
     private javax.swing.JTextField TypeTextField;
     private javax.swing.JTextField AngleTextField;
+    private javax.swing.JTextField OffsetXTextField;
     private javax.swing.JTextField OffsetYTextField;
+    private javax.swing.JTextField ObjectWidthTextField;
+    private javax.swing.JTextField ObjectHeightTextField;
     private javax.swing.JTextField NewDirTextField;
     private javax.swing.JButton Apply3Button;
     //private javax.swing.JButton backgroundChangeButton;

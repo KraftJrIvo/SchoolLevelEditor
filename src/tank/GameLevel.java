@@ -48,6 +48,8 @@ public class GameLevel {
     int curAngle=0;
     int curXOffset=0;
     int curYOffset=0;
+    int curObjectWidth=0;
+    int curObjectHeight=0;
 
     private String backgroundPath = null;
     private Image backgroundImage = null;
@@ -199,7 +201,7 @@ public class GameLevel {
         content0  = new int[getWidth()][getHeight()];
         content1  = new int[getWidth()][getHeight()];
         content2  = new int[getWidth()][getHeight()];
-        values = new int[getWidth()][getHeight()][4];
+        values = new int[getWidth()][getHeight()][6];
         //content3  = new int[getWidth()][getHeight()];
         int x, y;
         for (y=0; y<getHeight(); ++y){
@@ -208,7 +210,7 @@ public class GameLevel {
                 content1[x][y] = -1;
                 content2[x][y] = -1;
                 //content3[x][y] = -1;
-                for (int i=0; i<4; ++i){
+                for (int i=0; i<6; ++i){
                     if (i == 0) values[x][y][i] = -1;
                     else values[x][y][i] = 0;
                 }
@@ -230,14 +232,14 @@ public class GameLevel {
             content0  = new int[getWidth()][getHeight()];
             content1  = new int[getWidth()][getHeight()];
             content2  = new int[getWidth()][getHeight()];
-            values = new int[getWidth()][getHeight()][4];
+            values = new int[getWidth()][getHeight()][6];
             int x, y;
             for (y=0; y<getHeight(); ++y){
                 for (x=0; x<getWidth(); ++x){
                     content0[x][y] = -1;
                     content1[x][y] = -1;
                     content2[x][y] = -1;
-                    for (int i=0; i<4; ++i){
+                    for (int i=0; i<6; ++i){
                         if (i == 0) values[x][y][i] = -1;
                         else values[x][y][i] = 0;
                     }
@@ -308,10 +310,14 @@ public class GameLevel {
                 values[x][y][1] = 0;
                 values[x][y][2] = 0;
                 values[x][y][3] = 0;
+                values[x][y][4] = 0;
+                values[x][y][5] = 0;
             } else {
                 values[x][y][1] = curAngle;
                 values[x][y][2] = curXOffset;
                 values[x][y][3] = curYOffset;
+                values[x][y][4] = curObjectWidth;
+                values[x][y][5] = curObjectHeight;
             }
         }
         changed = true;
@@ -383,8 +389,8 @@ public class GameLevel {
                 z = fos.read();
                 if (x != coordX || y != coordY || z != coordZ) {
                     read += 5;
-                    fos.skipBytes(w*h*7);
-                    read += w*h*7;
+                    fos.skipBytes(w*h*9);
+                    read += w*h*9;
                 } else {
                     width = w;
                     height = h;
@@ -421,6 +427,8 @@ public class GameLevel {
                     fos.write(values[x][y][1]);
                     fos.write(values[x][y][2]);
                     fos.write(values[x][y][3]);
+                    fos.write(values[x][y][4]);
+                    fos.write(values[x][y][5]);
                 }
             }
             //fos.write(254);
@@ -638,6 +646,8 @@ public class GameLevel {
                     fos.write(values[x][y][1]);
                     fos.write(values[x][y][2]);
                     fos.write(values[x][y][3]);
+                    fos.write(values[x][y][4]);
+                    fos.write(values[x][y][5]);
                 }
             }
             //fos.write(254);
@@ -865,8 +875,8 @@ public class GameLevel {
             z = fInput.read();
             if (x != coordX || y != coordY || z != coordZ) {
                 read += 5;
-                fInput.skip(w*h*7);
-                read += w*h*7;
+                fInput.skip(w*h*9);
+                read += w*h*9;
             } else {
                 found = true;
                 break;
@@ -915,7 +925,8 @@ public class GameLevel {
             content0 = new int[width][height];
             content1 = new int[width][height];
             content2 = new int[width][height];
-            values = new int[width][height][4];
+            values = new int[width][height][6];
+            //setValues(tileWidth, tileHeight, 0, 0, false);
             changed = false;
             int sym;
             for (y = 0; y < height; ++y) {
@@ -953,6 +964,12 @@ public class GameLevel {
                     sym = fInput.read();
                     if (sym == 255) values[x][y][3] = 0;
                     else values[x][y][3] = sym;
+                    sym = fInput.read();
+                    if (sym == 255) values[x][y][4] = 0;
+                    else values[x][y][4] = sym;
+                    sym = fInput.read();
+                    if (sym == 255) values[x][y][5] = 0;
+                    else values[x][y][5] = sym;
                 }
             }
             return true;
