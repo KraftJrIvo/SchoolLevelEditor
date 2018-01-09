@@ -284,9 +284,16 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             }
         }
         for (int i = 0; i < newNames.size(); ++i) {
-            preTileTypes.set(i, tileTypes.get(names.indexOf(newNames.get(i))));
-            preTileIndices.set(i, tileIndices.get(names.indexOf(newNames.get(i))));
-            preNames.set(i, newNames.get(i));
+            int id = names.indexOf(newNames.get(i));
+            if (id != -1) {
+                preTileTypes.set(i, tileTypes.get(id));
+                preTileIndices.set(i, tileIndices.get(id));
+                preNames.set(i, newNames.get(i));
+            } else {
+                preTileTypes.add(i, -1);
+                preTileIndices.add(i, -1);
+                preNames.add(i, "");
+            }
         }
         for (int i = 0; i < unusedNames.size(); ++i) {
             preTileTypes.set(newNames.size() + i, unusedTypes.get(i));

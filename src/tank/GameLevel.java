@@ -555,8 +555,8 @@ public class GameLevel {
                 z = fos.read();
                 if (x != coordX || y != coordY || z != coordZ) {
                     read += 5;
-                    fos.skipBytes(w*h*7);
-                    read += w*h*7;
+                    fos.skipBytes(w*h*9);
+                    read += w*h*9;
                 } else {
                     width = w;
                     height = h;

@@ -613,8 +613,15 @@ public class EditorLevelPanel extends JPanel
             }
         } else if (mouseButton == MouseEvent.BUTTON2) {
             //shiftTiles(1);
-            gameLevel.fillFloor(gameLevel.getObjectsChooserPanel().getSelectedObject());
-            repaint();
+            //gameLevel.fillFloor(gameLevel.getObjectsChooserPanel().getSelectedObject());
+            gameLevel.curType = gameLevel.values[selectedColumn][selectedRow][0];
+            gameLevel.curAngle = gameLevel.values[selectedColumn][selectedRow][1];
+            gameLevel.curXOffset = gameLevel.values[selectedColumn][selectedRow][2];
+            gameLevel.curYOffset = gameLevel.values[selectedColumn][selectedRow][3];
+            gameLevel.curObjectWidth = gameLevel.values[selectedColumn][selectedRow][4];
+            gameLevel.curObjectHeight = gameLevel.values[selectedColumn][selectedRow][5];
+            ((LevelEditorFrame)parentFrame).updateFields();
+            //repaint();
         }
     }
 

@@ -916,7 +916,14 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
     }//GEN-LAST:event_LoadButtonActionPerformed
 
-
+    public void updateFields() {
+        TypeTextField.setText(""+editorLP.gameLevel.curType);
+        OffsetXTextField.setText(""+editorLP.gameLevel.curXOffset);
+        OffsetYTextField.setText(""+editorLP.gameLevel.curYOffset);
+        ObjectWidthTextField.setText(""+editorLP.gameLevel.curObjectWidth);
+        ObjectHeightTextField.setText(""+editorLP.gameLevel.curObjectHeight);
+        AngleTextField.setText(""+editorLP.gameLevel.curAngle);
+    }
     /**
     * @param args the command line arguments
     */
