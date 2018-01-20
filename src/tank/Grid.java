@@ -19,6 +19,7 @@ public class Grid {
     private int[] lineX = null;
     private int[] lineY = null;
     private boolean toCenter = true;
+    private float maxWidth = 1000;
 
     public Grid() {}
 
@@ -130,8 +131,8 @@ public class Grid {
     public void setSize(int w, int h, int panelWidth, int panelHeight) {
         if (w < 1 || h < 1) return;
         if (panelWidth < 1 || panelHeight < 1) return;
-        this.panelWidth = panelWidth;
-        this.panelHeight = panelHeight;
+        this.panelWidth = Math.min(panelWidth, (int)maxWidth);
+        this.panelHeight = Math.min(panelHeight, (int)maxWidth);
         initSize(w, h);
         recalc();
     }

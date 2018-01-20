@@ -19,9 +19,10 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -35,7 +36,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener {
     //ObjectsChooserPanel objectCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all_platform");
     ObjectsChooserPanel objectCC;// = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
-    ObjectsChooserPanel attributesOCC = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
+    ObjectsChooserPanel attributesOCC;// = new ObjectsChooserPanel("C:\\cool\\java\\School\\School\\android\\assets\\worlds\\all");
     EditorLevelPanel editorLP = new EditorLevelPanel (this);
 
     @Override
@@ -45,11 +46,22 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_PLUS) {
-            editorLP.shiftTiles(1);
-        } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
-            editorLP.shiftTiles(-1);
+        //System.out.println(e.getKeyCode());
+        if (e.getKeyCode() == 109) {
+            if (editorLP.currentZLayer < editorLP.gameLevel.worldHeight-1) {
+                editorLP.currentZLayer++;
+            }
+            //editorLP.shiftTiles(1);
+
+        } else if (e.getKeyCode() == 107) {
+            if (editorLP.currentZLayer > 0) {
+                editorLP.currentZLayer--;
+            }
+            //editorLP.shiftTiles(-1);
+        } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+            editorLP.removeRoom(editorLP.selectedId);
         }
+        editorLP.repaint();
     }
 
     @Override
@@ -89,19 +101,21 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
 
     }
 
+    private String path = "";
 
-    public LevelEditorFrame() {
-
+    private void initAll() {
+        editorLP = new EditorLevelPanel(this);
         JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new File("C:\\cool\\java\\School\\School\\android\\assets\\worlds"));
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setDialogTitle("Select world resources directory!");
         chooser.showOpenDialog(this);
-        String path = chooser.getSelectedFile().getAbsolutePath();
+        chooser.addKeyListener(this);
+        path = chooser.getSelectedFile().getAbsolutePath();
         objectCC = new ObjectsChooserPanel(path);
 
         initComponents();
-        initPanels();
+        initPanels(path);
 
         setTahomaFont(getContentPane());
 
@@ -115,7 +129,10 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
 //                300, 2150, 1000);
                 0, 1000, 700);
         int a = (byte) + (char) - (int) + (long) - 1;
-        System.out.println();
+    }
+
+    public LevelEditorFrame() {
+        initAll();
     }
 
     public static void setTahomaFont(Container parent) {
@@ -131,9 +148,28 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         }
     }
 
-    private void initPanels() {
+    private void copyFileUsingIO(File sourceFile, File destinationFile) throws IOException {
+        InputStream inputStreamData = null;
+        OutputStream outputStreamData = null;
+
+        try {
+            inputStreamData = new BufferedInputStream(new FileInputStream(sourceFile));
+            outputStreamData = new BufferedOutputStream(new FileOutputStream(destinationFile));
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStreamData.read(buffer)) > 0) {
+                outputStreamData.write(buffer, 0, length);
+            }
+
+        } finally {
+            inputStreamData.close();
+            outputStreamData.close();
+        }
+    }
+
+    private void initPanels(String path) {
         ObjectListScrollPane.setViewportView(objectCC);
-        ObjectListScrollPane2.setViewportView(attributesOCC);
+        //ObjectListScrollPane2.setViewportView(attributesOCC);
         LevelPanel.add(editorLP, java.awt.BorderLayout.CENTER);
         WidthTextField.setText("" + editorLP.getLevelWidth());
         HeightTextField.setText(""+editorLP.getLevelHeight());
@@ -145,9 +181,32 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CoordXTextField.setText(""+editorLP.gameLevel.coordX);
         CoordYTextField.setText(""+editorLP.gameLevel.coordY);
         CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
+        setFocusable(true);
+        this.addKeyListener(this);
 
         editorLP.setObjectsChooserPanel(objectCC);
         editorLP.setAttributesChooserPanel(attributesOCC);
+        editorLP.addMouseWheelListener(editorLP);
+        editorLP.setFocusable(true);
+        editorLP.addKeyListener(this);
+
+        File f = new File(path + "\\world1.tlw");
+        if(f.exists()) {
+            editorLP.gameLevel.load(path + "\\world1.tlw", true, true);
+            editorLP.currentZLayer = editorLP.gameLevel.worldHeight/2;
+            try {
+                copyFileUsingIO(f, new File(path + "\\backup_world1.tlw"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                f.createNewFile();
+                editorLP.gameLevel.fileName = path + "\\world1.tlw";
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         WidthTextField.addKeyListener(new FromStupidProtectionKeyListener(WidthTextField, 300));
         HeightTextField.addKeyListener(new FromStupidProtectionKeyListener(HeightTextField, 300));
 
@@ -175,7 +234,6 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private void initComponents() {
 
         jToolBar1 = new javax.swing.JToolBar();
-        SaveButton = new javax.swing.JButton();
         LoadButton = new javax.swing.JButton();
         RemoveButton = new javax.swing.JButton();
         ShiftButton = new javax.swing.JButton();
@@ -193,6 +251,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         PlatformModeLabel = new javax.swing.JLabel();
         WorldWidthLabel = new javax.swing.JLabel();
         WorldHeightLabel = new javax.swing.JLabel();
+        RoomNameLabel = new javax.swing.JLabel();
+        RoomAmbientNameLabel = new javax.swing.JLabel();
         CurXLabel = new javax.swing.JLabel();
         CurYLabel = new javax.swing.JLabel();
         CurZLabel = new javax.swing.JLabel();
@@ -220,6 +280,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CoordZTextField = new javax.swing.JTextField();
         CoordX2TextField = new javax.swing.JTextField();
         CoordY2TextField = new javax.swing.JTextField();
+        RoomNameTextField = new javax.swing.JTextField();
+        RoomAmbientNameTextField = new javax.swing.JTextField();
         TileWidthTextField = new javax.swing.JTextField();
         PlayerWidthTextField = new javax.swing.JTextField();
         TileHeightTextField = new javax.swing.JTextField();
@@ -227,6 +289,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         ApplyLevelPropertiesButton = new javax.swing.JButton();
         Apply2Button = new javax.swing.JButton();
         Apply3Button = new javax.swing.JButton();
+        SaveButton = new javax.swing.JButton();
         ObjectsPanel = new javax.swing.JPanel();
         AttributesPanel = new javax.swing.JPanel();
         ObjectListScrollPane = new javax.swing.JScrollPane();
@@ -251,7 +314,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         jToolBar1.setRollover(true);
         jToolBar1.setPreferredSize(new java.awt.Dimension(100, 20));
 
-        SaveButton.setFocusable(false);
+        /*SaveButton.setFocusable(false);
         SaveButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         SaveButton.setLabel("Save");
         SaveButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -260,7 +323,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                 SaveButtonActionPerformed(evt);
             }
         });
-        jToolBar1.add(SaveButton);
+        jToolBar1.add(SaveButton);*/
 
         LoadButton.setText("Load");
         LoadButton.setFocusable(false);
@@ -273,7 +336,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         });
         jToolBar1.add(LoadButton);
 
-        TestButton.setText("Add");
+        /*TestButton.setText("Add");
         TestButton.setFocusable(false);
         TestButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         TestButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -304,7 +367,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                 ShiftButtonActionPerformed(evt);
             }
         });
-        jToolBar1.add(ShiftButton);
+        jToolBar1.add(ShiftButton);*/
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.PAGE_START);
 
@@ -329,15 +392,24 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         ObjectHeightLabel.setText("Object Height:");
         AngleLabel.setText("Orientation:");
         TypeLabel.setText("Type:");
+        RoomNameLabel.setText("Room name:");
+        RoomAmbientNameLabel.setText("Room ambient:");
 
         Layer1RadioButton.setSelected(true);
 
         ApplyLevelPropertiesButton.setText("Apply");
         ApplyLevelPropertiesButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ApplyLevelPropertiesButtonActionPerformed(evt);
+                ApplyLevelPropertiesButtonActionPerformed(evt, false);
             }
         });
+        SaveButton.setText("Save");
+        SaveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ApplyLevelPropertiesButtonActionPerformed(evt, true);
+            }
+        });
+
         Apply3Button.setText("Change");
         Apply3Button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -395,6 +467,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                                 .addComponent(ObjectHeightLabel)
                                                 .addComponent(TypeLabel)
                                                 .addComponent(AngleLabel)
+                                                .addComponent(RoomNameLabel)
+                                                .addComponent(RoomAmbientNameLabel)
                                 )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false).addComponent(HeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -419,6 +493,9 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                         .addComponent(ObjectHeightTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(TypeTextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(AngleTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(RoomNameTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(RoomAmbientNameTextField, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(SaveButton, javax.swing.GroupLayout.Alignment.TRAILING)
                                                 //.addComponent(Apply2Button, javax.swing.GroupLayout.Alignment.TRAILING)
                                                 //.addComponent(CoordY2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
                                                 //.addComponent(CoordX2TextField, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -533,7 +610,15 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                         .addComponent(AngleTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(AngleLabel))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(RoomNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(RoomNameLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(RoomAmbientNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(RoomAmbientNameLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(SaveButton)
                                 .addContainerGap(151, Short.MAX_VALUE))
         );
 
@@ -651,7 +736,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         //objectCC.reload(NewDirTextField.getText());
     }
 
-    private void ApplyLevelPropertiesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
+    private void ApplyLevelPropertiesButtonActionPerformed(java.awt.event.ActionEvent evt, boolean save) {//GEN-FIRST:event_ApplyLevelPropertiesButtonActionPerformed
         int numberWidth, numberHeight, numberWidth2, numberHeight2, numberWidth3, numberHeight3, z;
         Integer i;
         try {
@@ -785,6 +870,16 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         CoordXTextField.setText(""+editorLP.gameLevel.coordX);
         CoordYTextField.setText(""+editorLP.gameLevel.coordY);
         CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
+        for (int zzz = 0; zzz < editorLP.gameLevel.roomsCoords.size(); ++zzz) {
+            ArrayList<Integer> coord = editorLP.gameLevel.roomsCoords.get(zzz);
+            if (coord.get(0) == editorLP.gameLevel.coordX && coord.get(1) == editorLP.gameLevel.coordY && coord.get(2) == editorLP.gameLevel.coordZ) {
+                editorLP.gameLevel.roomsNames.set(zzz, RoomNameTextField.getText());
+                editorLP.gameLevel.roomsAmbientNames.set(zzz, RoomAmbientNameTextField.getText());
+                editorLP.gameLevel.currentRoomId = zzz;
+            }
+        }
+        editorLP.requestFocus();
+        if (save) editorLP.gameLevel.save(path + "\\world1.tlw");
     }//GEN-LAST:event_ApplyLevelPropertiesButtonActionPerformed
 
     /*private void PlatformModeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
@@ -881,8 +976,33 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         }
     }
 
+    public void updateFieldsAfterLoad() {
+        NameTextField.setText(""+editorLP.gameLevel.getName());
+        WidthTextField.setText("" + editorLP.getLevelWidth());
+        HeightTextField.setText("" + editorLP.getLevelHeight());
+        TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
+        TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
+        ChunkWidthTextField.setText(""+editorLP.gameLevel.chunkWidth);
+        ChunkHeightTextField.setText(""+editorLP.gameLevel.chunkHeight);
+        PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
+        WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
+        WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
+        CoordXTextField.setText(""+editorLP.gameLevel.coordX);
+        CoordYTextField.setText(""+editorLP.gameLevel.coordY);
+        CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
+        if (editorLP.gameLevel.currentRoomId != -1) {
+            RoomNameTextField.setText(""+editorLP.gameLevel.roomsNames.get(editorLP.gameLevel.currentRoomId));
+            RoomAmbientNameTextField.setText(""+editorLP.gameLevel.roomsAmbientNames.get(editorLP.gameLevel.currentRoomId));
+        }
+    }
+
     private void LoadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadButtonActionPerformed
-        JFileChooser chooser = new JFileChooser();
+        //LevelPanel.remove(editorLP);
+        //initAll();
+        LevelEditorFrame newFrame = new LevelEditorFrame();
+        newFrame.setVisible(true);
+        dispose();
+        /*JFileChooser chooser = new JFileChooser();
         URLClassLoader urlLoader =
                 (URLClassLoader)getClass().getClassLoader();
         int urlID = 0;
@@ -900,20 +1020,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         int returnVal = chooser.showOpenDialog(this);
         if(returnVal == JFileChooser.APPROVE_OPTION) {
             editorLP.loadLevel(chooser.getSelectedFile().getAbsolutePath());
-        }
-        NameTextField.setText(""+editorLP.gameLevel.getName());
-        WidthTextField.setText("" + editorLP.getLevelWidth());
-        HeightTextField.setText("" + editorLP.getLevelHeight());
-        TileWidthTextField.setText(""+editorLP.gameLevel.tileWidth);
-        TileHeightTextField.setText(""+editorLP.gameLevel.tileHeight);
-        ChunkWidthTextField.setText(""+editorLP.gameLevel.chunkWidth);
-        ChunkHeightTextField.setText(""+editorLP.gameLevel.chunkHeight);
-        PlatformModeCheckBox.setSelected(editorLP.gameLevel.platformMode);
-        WorldWidthTextField.setText("" + editorLP.gameLevel.worldWidth);
-        WorldHeightTextField.setText(""+editorLP.gameLevel.worldHeight);
-        CoordXTextField.setText(""+editorLP.gameLevel.coordX);
-        CoordYTextField.setText(""+editorLP.gameLevel.coordY);
-        CoordZTextField.setText(""+editorLP.gameLevel.coordZ);
+        }*/
+        //updateFieldsAfterLoad();
     }//GEN-LAST:event_LoadButtonActionPerformed
 
     public void updateFields() {
@@ -965,12 +1073,13 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JLabel ObjectHeightLabel;
     private javax.swing.JLabel AngleLabel;
     private javax.swing.JLabel TypeLabel;
+    private javax.swing.JLabel RoomNameLabel;
+    private javax.swing.JLabel RoomAmbientNameLabel;
     private javax.swing.JTextField NameTextField;
     private javax.swing.JScrollPane ObjectListScrollPane;
     private javax.swing.JScrollPane ObjectListScrollPane2;
     private javax.swing.JPanel ObjectsPanel;
     private javax.swing.JPanel AttributesPanel;
-    private javax.swing.JButton SaveButton;
     private javax.swing.JButton TestButton;
     private javax.swing.JButton RemoveButton;
     private javax.swing.JButton ShiftButton;
@@ -993,8 +1102,11 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
     private javax.swing.JTextField OffsetYTextField;
     private javax.swing.JTextField ObjectWidthTextField;
     private javax.swing.JTextField ObjectHeightTextField;
+    private javax.swing.JTextField RoomNameTextField;
+    private javax.swing.JTextField RoomAmbientNameTextField;
     private javax.swing.JTextField NewDirTextField;
     private javax.swing.JButton Apply3Button;
+    private javax.swing.JButton SaveButton;
     //private javax.swing.JButton backgroundChangeButton;
     private javax.swing.JCheckBox backgroundVisibleCheckBox;
     private javax.swing.JCheckBox PlatformModeCheckBox;

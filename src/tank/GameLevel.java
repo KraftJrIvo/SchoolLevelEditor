@@ -9,6 +9,7 @@ import java.awt.Component;
 import java.awt.Image;
 import java.io.*;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,17 +32,25 @@ public class GameLevel {
     private String name = "Untitled1";
     //private int width = 32;
     //private int height = 32;
-    private int width = 16;
-    private int height = 16;
+    public int width = 16;
+    public int height = 16;
     public int chunkWidth = 4;
     public int chunkHeight = 8;
     public int tileWidth = 32, tileHeight = 16;
+    public String roomName = "";
+    public String roomAmbientName = "";
     boolean platformMode = false;
     private boolean changed = false;
     public int[][] content0 = null;
     public int[][] content1 = null;
     public int[][] content2 = null;
     //public int[][] content3 = null;
+
+    public ArrayList<ArrayList<Integer>> roomsCoords;
+    public ArrayList<String> roomsNames;
+    public ArrayList<String> roomsAmbientNames;
+    public ArrayList<ArrayList<ArrayList<Boolean>>> roomsWalls;
+    int currentRoomId = -1;
 
     public int[][][] values = null;
     int curType=0;
@@ -192,6 +201,10 @@ public class GameLevel {
 
     public GameLevel(Component component) {
         parent = component;
+        roomsCoords = new ArrayList<ArrayList<Integer>>();
+        roomsNames = new ArrayList<String>();
+        roomsAmbientNames = new ArrayList<String>();
+        roomsWalls = new ArrayList<ArrayList<ArrayList<Boolean>>>();
         setSize(width, height);
     }
 
@@ -284,14 +297,15 @@ public class GameLevel {
     public void setCell(int x, int y, int layer, int item) {
         if (x < 0 || y < 0 || x >= getWidth() || y >= getHeight()) return;
 
-
         if (layer == 0) {
             content0[x][y] = item;
             if (content1[x][y] == -1) {
                 if (item == -1) {
                     values[x][y][0] = -1;
                 }
-                else values[x][y][0] = 1;
+                else {
+                    values[x][y][0] = 1;
+                }
             }
         } else if (layer == 1) {
             content1[x][y] = item;
@@ -299,9 +313,13 @@ public class GameLevel {
                 if (content0[x][y] == -1) {
                     values[x][y][0] = -1;
                 }
-                else values[x][y][0] = 1;
+                else {
+                    values[x][y][0] = 1;
+                }
             }
-            else values[x][y][0] = 2;
+            else {
+                values[x][y][0] = 2;
+            }
         } else if (layer == 2) {
             content2[x][y] = item;
         } else {
@@ -318,9 +336,23 @@ public class GameLevel {
                 values[x][y][3] = curYOffset;
                 values[x][y][4] = curObjectWidth;
                 values[x][y][5] = curObjectHeight;
+                if (item == 1) {
+                } else if (item == 2) {
+                }
             }
         }
         changed = true;
+        if (currentRoomId != -1) {
+            if (values[x][y][0] != -1) {
+                if (values[x][y][0] == 1) {
+                    roomsWalls.get(currentRoomId).get(y).set(x, false);
+                } else if (values[x][y][0] == 2) {
+                    roomsWalls.get(currentRoomId).get(y).set(x, true);
+                }
+            } else {
+                roomsWalls.get(currentRoomId).get(y).set(x, null);
+            }
+        }
     }
 
     /**
@@ -339,6 +371,11 @@ public class GameLevel {
 
     public void add(String fileName) {
 
+        roomName = roomsNames.get(currentRoomId);
+        roomAmbientName = roomsAmbientNames.get(currentRoomId);
+        coordX = roomsCoords.get(currentRoomId).get(0);
+        coordY = roomsCoords.get(currentRoomId).get(1);
+        coordZ = roomsCoords.get(currentRoomId).get(2);
         try {
             RandomAccessFile fos = new RandomAccessFile(fileName, "rw");
             //fos.skipBytes((int)fos.length()-1);
@@ -379,7 +416,7 @@ public class GameLevel {
             fos.skipBytes(size + 7);
             int x=999, y=999, z=999, w=999, h=999;
             boolean found = false;
-            read = size + 8;
+            read += size + 8;
             do {
                 if (read >= fos.length()) break;
                 w = fos.read();
@@ -387,8 +424,16 @@ public class GameLevel {
                 x = fos.read();
                 y = fos.read();
                 z = fos.read();
+                int roomNameSize = fos.read();
+                byte[] buff2 = new byte[roomNameSize];
+                fos.read(buff2);
+                //String roomName = new String(buff2);
+                int roomAmbientNameSize = fos.read();
+                byte[] buff3 = new byte[roomAmbientNameSize];
+                fos.read(buff3);
+                //String roomAmbientName = new String(buff3);
                 if (x != coordX || y != coordY || z != coordZ) {
-                    read += 5;
+                    read += 5 + roomNameSize + 1 + roomAmbientNameSize + 1;
                     fos.skipBytes(w*h*9);
                     read += w*h*9;
                 } else {
@@ -405,6 +450,10 @@ public class GameLevel {
                 fos.write(coordX);
                 fos.write(coordY);
                 fos.write(coordZ);
+                fos.write(roomName.length());
+                fos.write(roomName.getBytes(), 0, roomName.getBytes().length);
+                fos.write(roomAmbientName.length());
+                fos.write(roomAmbientName.getBytes(), 0, roomAmbientName.getBytes().length);
             }
             for (y = 0; y < height; ++y) {
                 for (x = 0; x < width; ++x) {
@@ -431,7 +480,7 @@ public class GameLevel {
                     fos.write(values[x][y][5]);
                 }
             }
-            //fos.write(254);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -580,8 +629,45 @@ public class GameLevel {
         }
     }
 
-    public void save(String fileName) {
+    private void copyFileUsingIO(File sourceFile, File destinationFile) throws IOException {
+        InputStream inputStreamData = null;
+        OutputStream outputStreamData = null;
 
+        try {
+            inputStreamData = new BufferedInputStream(new FileInputStream(sourceFile));
+            outputStreamData = new BufferedOutputStream(new FileOutputStream(destinationFile));
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStreamData.read(buffer)) > 0) {
+                outputStreamData.write(buffer, 0, length);
+            }
+
+        } finally {
+            inputStreamData.close();
+            outputStreamData.close();
+        }
+    }
+
+    public void save(String fileName) {
+        //File f2 = new File(fileName.replace("world", "_world"));
+        File file = new File(fileName);
+        if (!file.exists() || currentRoomId == -1) {
+            return;
+        }
+        File yourFile = new File(fileName.replace("world1", "wworld1"));
+        try {
+            yourFile.createNewFile(); // if file already exists will do nothing
+            FileOutputStream oFile = new FileOutputStream(yourFile, false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        File f1 = new File(fileName);
+        try {
+            copyFileUsingIO(f1, yourFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         FileOutputStream fos = null;
         ZipOutputStream zos = null;
         ZipEntry ze = null;
@@ -598,7 +684,7 @@ public class GameLevel {
         } catch (IOException ex) {
             Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
         }*/
-
+        int prevRoomId = currentRoomId;
         String str = "Tank Game v1.4\n";
         try {
             fos.write(getObjectsChooserPanel().names.size());
@@ -619,37 +705,69 @@ public class GameLevel {
             fos.write(tileHeight);
             fos.write(chunkWidth);
             fos.write(chunkHeight);
-            fos.write(width);
-            fos.write(height);
-            fos.write(coordX);
-            fos.write(coordY);
-            fos.write(coordZ);
-            int x, y;
-            for (y = 0; y < height; ++y) {
-                for (x = 0; x < width; ++x) {
-                    fos.write(content0[x][y]);
+            for (int i = -1; i < roomsCoords.size(); ++i) {
+                if (i == currentRoomId) continue;
+                if (i != -1) {
+                    roomName = roomsNames.get(i);
+                    roomAmbientName = roomsAmbientNames.get(i);
+                    coordX = roomsCoords.get(i).get(0);
+                    coordY = roomsCoords.get(i).get(1);
+                    coordZ = roomsCoords.get(i).get(2);
+                    load(fileName.replace("world1", "wworld1"), false, false);
+                    this.fileName.replace("wworld1", "world1");
+                } else {
+                    roomName = roomsNames.get(currentRoomId);
+                    roomAmbientName = roomsAmbientNames.get(currentRoomId);
+                }
+                fos.write(width);
+                fos.write(height);
+                fos.write(coordX);
+                fos.write(coordY);
+                fos.write(coordZ);
+                fos.write(roomName.length());
+                fos.write(roomName.getBytes(), 0, roomName.getBytes().length);
+                fos.write(roomAmbientName.length());
+                fos.write(roomAmbientName.getBytes(), 0, roomAmbientName.getBytes().length);
+                int x, y;
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        fos.write(content0[x][y]);
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        fos.write(content1[x][y]);
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        fos.write(content2[x][y]);
+                    }
+                }
+                for (y = 0; y < height; ++y) {
+                    for (x = 0; x < width; ++x) {
+                        fos.write(values[x][y][0]);
+                        fos.write(values[x][y][1]);
+                        fos.write(values[x][y][2]);
+                        fos.write(values[x][y][3]);
+                        fos.write(values[x][y][4]);
+                        fos.write(values[x][y][5]);
+                    }
                 }
             }
-            for (y = 0; y < height; ++y) {
-                for (x = 0; x < width; ++x) {
-                    fos.write(content1[x][y]);
-                }
-            }
-            for (y = 0; y < height; ++y) {
-                for (x = 0; x < width; ++x) {
-                    fos.write(content2[x][y]);
-                }
-            }
-            for (y = 0; y < height; ++y) {
-                for (x = 0; x < width; ++x) {
-                    fos.write(values[x][y][0]);
-                    fos.write(values[x][y][1]);
-                    fos.write(values[x][y][2]);
-                    fos.write(values[x][y][3]);
-                    fos.write(values[x][y][4]);
-                    fos.write(values[x][y][5]);
-                }
-            }
+            currentRoomId = prevRoomId;
+            roomName = roomsNames.get(currentRoomId);
+            roomAmbientName = roomsAmbientNames.get(currentRoomId);
+            coordX = roomsCoords.get(currentRoomId).get(0);
+            coordY = roomsCoords.get(currentRoomId).get(1);
+            coordZ = roomsCoords.get(currentRoomId).get(2);
+            //load(, false, false);
+            ((EditorLevelPanel)parent).reloadLevel(fileName);
+            //boolean b = yourFile.delete();
+            yourFile.deleteOnExit();
+            /*((EditorLevelPanel)parent).invalidateAll();
+            ((EditorLevelPanel)parent).repaint();
+            (LevelEditorFrame)((EditorLevelPanel)parent).parentFrame)).updateFieldsAfterLoad();*/
             //fos.write(254);
             //zos.closeEntry();
         } catch (IOException ex) {
@@ -728,11 +846,14 @@ public class GameLevel {
         return ext;
     }
 
-    public void load(String fileName) {
-        if (changed) {
+    public String fileName = "";
+
+    public void load(String fileName, boolean fullLoad, boolean updateTiles) {
+        this.fileName = fileName;
+       /* if (changed) {
             int ret = JOptionPane.showConfirmDialog(parent, "Эта, как его, всё потрёте, дядя. Трём?", "Эта, предупреждениё", JOptionPane.YES_NO_OPTION );
             if (ret == JOptionPane.NO_OPTION) return;
-        }
+        }*/
         /*if (!fileName.toLowerCase().endsWith(".tlv")) {
             fileName += ".tlv";
         }*/
@@ -745,74 +866,11 @@ public class GameLevel {
             JOptionPane.showConfirmDialog(parent, "Нельзя читать энтот файл, дядя. Понял?", "Фига", JOptionPane.OK_CANCEL_OPTION );
             return;
         }
-        loadTLW(file);
-    }
-
-    private boolean loadTLZ(File file) {
-        InputStream fis = null;
-        ZipFile zip = null;
-        ZipEntry ze = null;
-        try {
-            zip = new ZipFile(file);
-        } catch (ZipException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            ze = zip.getEntry("Content.tlv");
-            fis = zip.getInputStream(ze);
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (fis == null) {
-            try {
-                zip.close();
-            } catch (IOException ex) {
-                Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return false;
-        }
-        try {
-            boolean ret = loadFromInputStream(fis, file.length());
-            fis.close();
-            if (ret) {
-                backgroundImage = ObjectsChooserPanel.getImageFromZipFile(zip, "background", true);
-                backgroundPath = file.getPath();
-            }
-            if (versionString.compareTo("1.4") == 0) {
-                Image image;
-                int i;
-                platformPaletteImages.clear();
-                if (platformPaletteImageArray != null) {
-                    for (i = 0; i < platformPaletteImageArray.length; ++i)
-                        platformPaletteImageArray[i] = null;
-                    platformPaletteImageArray = null;
-                }
-                String imageName;
-                for (i = 0; i < tempPlatformDecorationPaletteSize; ++i) {
-                    imageName = "platform_decoration/image"+String.format("%03d", i);
-                    image = ObjectsChooserPanel.getImageFromZipFile(zip, imageName, true);
-                    addImageForPlatformPalette(image, imageName);
-                }
-            }
-            zip.close();
-            return ret;
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            fis.close();
-            zip.close();
-        } catch (IOException ex) {
-            Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
-            return true;
-        }
-        return false;
+        loadTLW(file, fullLoad, updateTiles);
     }
 
 
-    private boolean loadTLW(File file) {
+    private boolean loadTLW(File file, boolean fullLoad, boolean updateTiles) {
         FileInputStream fInput = null;
         try {
             fInput = new FileInputStream(file);
@@ -823,9 +881,16 @@ public class GameLevel {
             return true;
         }
         try {
-            if (loadFromInputStream(fInput, file.length())) {
-                fInput.close();
-                return true;
+            if (fullLoad) {
+                if (fullLoadFromInputStream(fInput, file.length())) {
+                    fInput.close();
+                    return true;
+                }
+            } else {
+                if (loadFromInputStream(fInput, file.length(), updateTiles)) {
+                    fInput.close();
+                    return true;
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(GameLevel.class.getName()).log(Level.SEVERE, null, ex);
@@ -834,9 +899,14 @@ public class GameLevel {
         return false;
     }
 
-    private boolean loadFromInputStream(InputStream fInput, long length) throws IOException {
+    private boolean fullLoadFromInputStream(InputStream fInput, long length) throws IOException {
         tempPlatformDecorationPaletteSize = -1;
         platforms.clear();
+
+        roomsNames = new ArrayList<String>();
+        roomsAmbientNames = new ArrayList<String>();
+        roomsCoords = new ArrayList<ArrayList<Integer>>();
+        roomsWalls = new ArrayList<ArrayList<ArrayList<Boolean>>>();
 
         String nameTemp;
         int namesCount = fInput.read();
@@ -873,8 +943,137 @@ public class GameLevel {
             x = fInput.read();
             y = fInput.read();
             z = fInput.read();
+            //read += 5;
+            int roomNameSize = fInput.read();
+            if (roomNameSize < 0) break;
+            byte[] buff2 = new byte[roomNameSize];
+            fInput.read(buff2);
+            String roomName = new String(buff2);
+            int roomAmbientNameSize = fInput.read();
+            byte[] buff3 = new byte[roomAmbientNameSize];
+            fInput.read(buff3);
+            String roomAmbientName = new String(buff3);
+            read += 5 + roomNameSize + 1 + roomAmbientNameSize + 1;
+            boolean bad = false;
+            for (int i = 0; i < roomsCoords.size(); ++i) {
+                if (roomsCoords.get(i).get(0) == x && roomsCoords.get(i).get(1) == y && roomsCoords.get(i).get(2) == z) {
+                    bad = true;
+                    break;
+                }
+            }
+            if (bad || x > 200 || y > 200 || z > 200) {
+                fInput.skip(w*h*9);
+                read+=w*h*9;
+            } else {
+                roomsCoords.add(new ArrayList<Integer>());
+                roomsNames.add(roomName);
+                roomsAmbientNames.add(roomAmbientName);
+                roomsCoords.get(roomsCoords.size()-1).add(x);
+                roomsCoords.get(roomsCoords.size()-1).add(y);
+                roomsCoords.get(roomsCoords.size()-1).add(z);
+                roomsWalls.add(new ArrayList<ArrayList<Boolean>>());
+                /*for (y = 0; y < h; ++y) {
+                    roomsWalls.get(roomsWalls.size()-1).add(new ArrayList<Boolean>());
+                    for (x = 0; x < w; ++x) {
+                        int sym = fInput.read();
+                        read++;
+                        if (sym == 255) {
+                            roomsWalls.get(roomsWalls.size()-1).get(roomsWalls.get(roomsWalls.size()-1).size()-1).add(null);
+                        } else {
+                            roomsWalls.get(roomsWalls.size()-1).get(roomsWalls.get(roomsWalls.size()-1).size()-1).add(false);
+                        }
+                    }
+                }
+                for (y = 0; y < h; ++y) {
+                    for (x = 0; x < w; ++x) {
+                        int sym = fInput.read();
+                        read++;
+                        if (sym != 255) {
+                            roomsWalls.get(roomsWalls.size()-1).get(y).set(x, true);
+                        }
+                    }
+                }*/
+                fInput.skip(w*h*3);
+                read+=w*h*3;
+                for (y = 0; y < h; ++y) {
+                    roomsWalls.get(roomsWalls.size()-1).add(new ArrayList<Boolean>());
+                    for (x = 0; x < w; ++x) {
+                        int sym = fInput.read();
+                        read++;
+                        if (sym == 2) {
+                            roomsWalls.get(roomsWalls.size()-1).get(roomsWalls.get(roomsWalls.size()-1).size()-1).add(true);
+                        }else if (sym == 255) {
+                            roomsWalls.get(roomsWalls.size()-1).get(roomsWalls.get(roomsWalls.size()-1).size()-1).add(null);
+                        } else {
+                            roomsWalls.get(roomsWalls.size()-1).get(roomsWalls.get(roomsWalls.size()-1).size()-1).add(false);
+                        }
+                        fInput.skip(5);
+                        read+=5;
+                    }
+                }
+            }
+            //fInput.skip(w*h*5);
+            //read+=w*h*5;
+            if (roomsWalls.get(roomsWalls.size()-1).size() == 0) {
+                roomsWalls.remove(roomsWalls.size()-1);
+                roomsCoords.remove(roomsCoords.size()-1);
+                break;
+            }
+        } while (read < length);
+
+        return true;
+    }
+
+    private boolean loadFromInputStream(InputStream fInput, long length, boolean updateTiles) throws IOException {
+        tempPlatformDecorationPaletteSize = -1;
+        platforms.clear();
+
+        String nameTemp;
+        int namesCount = fInput.read();
+        if (updateTiles) getObjectsChooserPanel().newNames.clear();
+        int nameSize;
+        for (int i =0; i < namesCount; ++i) {
+            nameSize = fInput.read();
+            byte[] buff = new byte[nameSize];
+            fInput.read(buff);
+            if (updateTiles) getObjectsChooserPanel().newNames.add(new String(buff));
+        }
+        if (updateTiles) getObjectsChooserPanel().updateTiles();
+        int size;
+        size = fInput.read();
+        byte[] buff = new byte[size];
+        fInput.read(buff);
+        name = new String(buff);
+        int tmp = fInput.read();
+        if (tmp == 0) platformMode = false;
+        else platformMode = true;
+        worldWidth = fInput.read();
+        worldHeight = fInput.read();
+        tileWidth = fInput.read();
+        tileHeight = fInput.read();
+        chunkWidth = fInput.read();
+        chunkHeight = fInput.read();
+        int x=999, y=999, z=999, w=999, h=999;
+        boolean found = false;
+        long read = 6+name.length();
+        do {
+            if (read >= length) break;
+            w = fInput.read();
+            h = fInput.read();
+            x = fInput.read();
+            y = fInput.read();
+            z = fInput.read();
+            int roomNameSize = fInput.read();
+            if (roomNameSize < 0) break;
+            byte[] buff2 = new byte[roomNameSize];
+            fInput.read(buff2);
+            //String roomName = new String(buff2);
+            int roomAmbientNameSize = fInput.read();
+            byte[] buff3 = new byte[roomAmbientNameSize];
+            fInput.read(buff3);
+            //String roomAmbientName = new String(buff3);
+            read += 5 + roomNameSize + 1 + roomAmbientNameSize + 1;
             if (x != coordX || y != coordY || z != coordZ) {
-                read += 5;
                 fInput.skip(w*h*9);
                 read += w*h*9;
             } else {
@@ -970,6 +1169,13 @@ public class GameLevel {
                     sym = fInput.read();
                     if (sym == 255) values[x][y][5] = 0;
                     else values[x][y][5] = sym;
+                }
+            }
+            for (int zzz = 0; zzz < roomsCoords.size(); ++zzz) {
+                ArrayList<Integer> coord = roomsCoords.get(zzz);
+                if (coord.get(0) ==coordX && coord.get(1) == coordY && coord.get(2) == coordZ) {
+                    currentRoomId = zzz;
+                    break;
                 }
             }
             return true;

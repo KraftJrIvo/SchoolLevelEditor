@@ -10,8 +10,10 @@ import java.awt.*;
 
 import java.awt.event.*;
 
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
+import java.util.ArrayList;
 
 import javax.swing.InputMap;
 import javax.swing.JComponent;
@@ -122,13 +124,8 @@ public class EditorLevelPanel extends JPanel
     }
 
     public void loadLevel(String fileName) {
-        gameLevel.load(fileName);
+        gameLevel.load(fileName, false, true);
         gridSizeChanged();
-/*        if (gameLevel.getBackground() != null) {
-            backgroundImage = ObjectsChooserPanel.getImageAtPath(this, gameLevel.getBackground());
-        } else {
-            backgroundImage = null;
-        }*/
         invalidateAll();
         repaint();
     }
@@ -184,6 +181,8 @@ public class EditorLevelPanel extends JPanel
             if (backgroundIsVisible && gameLevel.getBackgroundImage() != null) g.setPaintMode();
         }
     }
+
+
 
     private void drawImage(Graphics2D g2, Image image, int col, int row) {
         //int width = grid.getLineX(col+1)-grid.getLineX(col);
@@ -380,6 +379,9 @@ public class EditorLevelPanel extends JPanel
                     } else {
                         image = gameLevel.getObjectsChooserPanel().getImage(0);
                     }
+                    if (image == null) {
+                        continue;
+                    }
                     int width = 0, height = 0;
                     float test1 = 0;
                     if (n != 3) {
@@ -532,7 +534,10 @@ public class EditorLevelPanel extends JPanel
             g.setColor(Color.lightGray);
             g.fillRect(0, 0, getWidth(), getHeight());
         }
-        if (gridIsVisible) drawGrid(g);
+        if (gridIsVisible) {
+            drawWorldEditorPanel(g);
+            drawGrid(g);
+        }
         if (gameLevelBufferedImage0!=null) g.drawImage(gameLevelBufferedImage0, 0, 0, gameLevelBufferedImage0.getWidth(),
                     gameLevelBufferedImage0.getHeight(), this);
         if (gameLevelBufferedImage1!=null) g.drawImage(gameLevelBufferedImage1, 0, 0, gameLevelBufferedImage1.getWidth(),
@@ -577,12 +582,262 @@ public class EditorLevelPanel extends JPanel
     public void mouseClicked(MouseEvent e) {
     }
 
+    public boolean mouseIsInGrid(int x, int y) {
+        Rectangle rect = new Rectangle();
+        rect.x = grid.getCellRect(0, 0).left;
+        rect.y = grid.getCellRect(0, 0).top;
+        rect.width = grid.getGridScreenWidth();
+        rect.height = grid.getGridScreenHeight();
+        return rect.contains(x, y);
+    }
+
+    public boolean mouseIsInEditorGrid(int x, int y) {
+        Rectangle rect = new Rectangle();
+        rect.width = (int)(realChunkSize * gameLevel.worldWidth);
+        rect.x = getWidth()/2 - rect.width/2 + worldEditorPanelOffsetX;
+        rect.height = (int)(realChunkSize * gameLevel.worldWidth);
+        rect.y = grid.getLineY(0) + worldEditorPanelOffsetY - rect.height;
+        return rect.contains(x, y);
+    }
+
+    private int lastMouseX = 0;
+    private int lastMouseY = 0;
+    private int worldEditorPanelOffsetX = 0;
+    private int worldEditorPanelOffsetY = 0;
+    private int worldEditorPanelOffsetScale = 10;
+    private boolean lastClickInGrid = false;
+    public int currentZLayer = 0;
+    private int lastMovedMouseX = 0;
+    private int lastMovedMouseY = 0;
+    int realChunkSize = 0;
+    public int selectedId = -1;
+
+    private void drawWorldEditorPanel(Graphics g) {
+        float scale = worldEditorPanelOffsetScale/10.0f;
+        int chunkSize = 20;
+        realChunkSize = (int)(chunkSize * scale);
+        int w = (int)(realChunkSize * gameLevel.worldWidth);
+        int h = (int)(realChunkSize * gameLevel.worldWidth);
+        int x = getWidth()/2 - w/2 + worldEditorPanelOffsetX;
+        int y = grid.getLineY(0) + worldEditorPanelOffsetY;
+        for (int i = 0; i < gameLevel.worldWidth; ++i) {
+            for (int j = 0; j < gameLevel.worldWidth; ++j) {
+                if ((j + i)%2 == 0) g.setColor(new Color(0.1f, 0.1f, 0.1f));
+                else g.setColor(new Color(0.0f, 0.0f, 0.0f));
+                g.fillRect(x + i * realChunkSize, y - (j+1) * realChunkSize, realChunkSize, realChunkSize);
+            }
+        }
+        for (int z = 0; z <= currentZLayer; ++z) {
+            float colorScale = ((float)(gameLevel.worldHeight - Math.abs(z-currentZLayer)))/((float)gameLevel.worldHeight);
+            g.setColor(new Color(0.5f * colorScale, 0.5f * colorScale, 0.5f * colorScale));
+            selectedId = -1;
+            int selectedXX = -1;
+            int selectedYY = -1;
+            int selectedWW = -1;
+            int selectedHH = -1;
+            for (int i = 0; i < gameLevel.roomsCoords.size(); ++i) {
+                int xx = gameLevel.roomsCoords.get(i).get(0);
+                int yy = gameLevel.roomsCoords.get(i).get(1) - 1;
+                int zz = gameLevel.roomsCoords.get(i).get(2);
+                int ww = gameLevel.roomsWalls.get(i).get(0).size();
+                int hh = gameLevel.roomsWalls.get(i).size();
+                if (zz == z) {
+                    if (z == currentZLayer && lastMovedMouseX > x + xx * realChunkSize && lastMovedMouseX < x + xx * realChunkSize + realChunkSize*(ww/gameLevel.chunkWidth) &&
+                            lastMovedMouseY < y - (yy+1) * realChunkSize && lastMovedMouseY > y - (yy+1) * realChunkSize - realChunkSize*(hh/gameLevel.chunkHeight)) {
+                        g.setColor(new Color(0.5f * colorScale, 0.7f * colorScale, 0.5f * colorScale));
+                        g.fillRect(x + xx * realChunkSize, y - (yy+1) * realChunkSize - realChunkSize*(hh/gameLevel.chunkHeight), realChunkSize*(ww/gameLevel.chunkWidth), realChunkSize*hh/gameLevel.chunkHeight);
+                        selectedId = i;
+                        selectedXX = xx;
+                        selectedYY = yy;
+                        selectedHH = hh;
+                        selectedWW = ww;
+                    } else {
+                        g.setColor(new Color(0.5f * colorScale, 0.5f * colorScale, 0.5f * colorScale));
+                        g.fillRect(x + xx * realChunkSize, y - (yy+1) * realChunkSize - realChunkSize*(hh/gameLevel.chunkHeight), realChunkSize*(ww/gameLevel.chunkWidth), realChunkSize*hh/gameLevel.chunkHeight);
+                    }
+                    float blockXSize = ((float)(realChunkSize)/((float)gameLevel.chunkWidth));
+                    float blockYSize = ((float)(realChunkSize)/((float)gameLevel.chunkHeight));
+                    if (z == currentZLayer) {
+                        for (int xxx = 0; xxx < realChunkSize * ww/gameLevel.chunkWidth; ++xxx) {
+                            for (int yyy = 0; yyy < realChunkSize * hh/gameLevel.chunkHeight; ++yyy) {
+                                int xxxx = (int)((float)xxx / blockXSize);
+                                int yyyy = (int)((float)yyy / blockYSize);
+                                if (gameLevel.roomsWalls.get(i).get(yyyy).get(xxxx) != null) {
+                                    if (gameLevel.roomsWalls.get(i).get(yyyy).get(xxxx)) {
+                                        g.setColor(new Color(0.7f , 0.7f, 0.7f));
+                                        g.fillRect(x + xx * realChunkSize + xxx, y - (yy+1) * realChunkSize + yyy - realChunkSize * hh/gameLevel.chunkHeight, 1, 1);
+                                    }
+                                } else {
+                                    g.setColor(new Color(0.3f , 0.3f, 0.3f));
+                                    g.fillRect(x + xx * realChunkSize + xxx, y - (yy+1) * realChunkSize + yyy - realChunkSize * hh/gameLevel.chunkHeight, 1, 1);
+                                }
+                            }
+                        }
+                    }
+                    g.setColor(new Color(0.6f * colorScale, 0.6f * colorScale, 0.6f * colorScale));
+                    g.drawRect(x + xx * realChunkSize, y - (yy+1) * realChunkSize - realChunkSize*(hh/gameLevel.chunkHeight), realChunkSize*(ww/gameLevel.chunkWidth), realChunkSize*hh/gameLevel.chunkHeight);
+                }
+            }
+            if (selectedId != -1 && gameLevel.roomsCoords.get(selectedId).get(2) == currentZLayer) {
+                gameLevel.coordX = gameLevel.roomsCoords.get(selectedId).get(0);
+                gameLevel.coordY = gameLevel.roomsCoords.get(selectedId).get(1);
+                gameLevel.coordZ = gameLevel.roomsCoords.get(selectedId).get(2);
+                g.setColor(new Color(0.6f * colorScale, 0.8f * colorScale, 0.6f * colorScale));
+                g.drawRect(x + selectedXX * realChunkSize, y - (selectedYY+1) * realChunkSize - realChunkSize*(selectedHH/gameLevel.chunkHeight), realChunkSize*(selectedWW/gameLevel.chunkWidth), realChunkSize*selectedHH/gameLevel.chunkHeight);
+                g.setColor(new Color(1.0f, 0, 0));
+                g.drawString(gameLevel.roomsNames.get(selectedId), lastMovedMouseX, lastMovedMouseY);
+            } else {
+                gameLevel.coordX = -1;
+                gameLevel.coordY = -1;
+                gameLevel.coordZ = -1;
+            }
+        }
+        g.setColor(new Color(1.0f, 1.0f, 1.0f));
+        if (clickedDotX != 0 && clickedDotY != 0) {
+            g.drawRect(clickedDotX, clickedDotY, curDotX - clickedDotX, curDotY - clickedDotY);
+        } else {
+            g.drawRect(curDotX, curDotY, 1, 1);
+        }
+    }
+
+    int clickedDotX = 0;
+    int clickedDotY = 0;
+
     public void mousePressed(MouseEvent e) {
         mouseButton = e.getButton();
-        mouseEvent(e);
+        if (mouseIsInGrid(e.getX(), e.getY())) {
+            mouseEvent(e);
+            lastClickInGrid = false;
+        } else {
+            if (mouseIsInEditorGrid(e.getX(), e.getY()) && curDotDist < 5) {
+                clickedDotX = curDotX;
+                clickedDotY = curDotY;
+            }
+            else if (mouseButton == MouseEvent.BUTTON1) {
+                lastMouseX = e.getX();
+                lastMouseY = e.getY();
+            }
+            lastClickInGrid = true;
+        }
+    }
+
+    public void reloadLevel(String fileName) {
+        gameLevel.load(fileName, false, false);
+        gridSizeChanged();
+        invalidateAll();
+        repaint();
+        ((LevelEditorFrame)(parentFrame)).updateFieldsAfterLoad();
+    }
+
+    public void removeRoom(int id) {
+        gameLevel.roomsCoords.remove(id);
+        gameLevel.roomsWalls.remove(id);
+        gameLevel.roomsNames.remove(id);
+        gameLevel.roomsAmbientNames.remove(id);
+        if (gameLevel.currentRoomId == id) {
+            reloadLevel(gameLevel.fileName);
+        }
+    }
+
+    private void addRoom(int x, int y, int w, int h) {
+        gameLevel.coordX = x;
+        gameLevel.coordY = y;
+        gameLevel.coordZ = currentZLayer;
+        gameLevel.width = w * gameLevel.chunkWidth;
+        gameLevel.height = h * gameLevel.chunkHeight;
+        gameLevel.roomsCoords.add(new ArrayList<Integer>());
+        gameLevel.roomsCoords.get(gameLevel.roomsCoords.size()-1).add(x);
+        gameLevel.roomsCoords.get(gameLevel.roomsCoords.size()-1).add(y);
+        gameLevel.roomsCoords.get(gameLevel.roomsCoords.size()-1).add(currentZLayer);
+        gameLevel.roomsNames.add("");
+        gameLevel.roomsAmbientNames.add("");
+        gameLevel.currentRoomId = gameLevel.roomsNames.size()-1;
+        /*gameLevel.roomsWalls = new ArrayList<ArrayList<ArrayList<Boolean>>>();
+        for (int i = 0; i < h * gameLevel.chunkHeight; ++i) {
+            gameLevel.roomsWalls.add(new ArrayList<ArrayList<Boolean>>());
+            for (int j = 0; j < w * gameLevel.chunkWidth; ++j) {
+                gameLevel.roomsWalls.get(i).add(null);
+            }
+        }*/
+        gameLevel.roomsWalls.add(new ArrayList<ArrayList<Boolean>>());
+        for (y = 0; y < gameLevel.height; ++y) {
+            gameLevel.roomsWalls.get(gameLevel.roomsWalls.size()-1).add(new ArrayList<Boolean>());
+            for (x = 0; x < gameLevel.width; ++x) {
+                gameLevel.roomsWalls.get(gameLevel.roomsWalls.size()-1).get(gameLevel.roomsWalls.get(gameLevel.roomsWalls.size()-1).size()-1).add(null);
+            }
+        }
+
+        gameLevel.content0 = new int[gameLevel.width][gameLevel.height];
+        gameLevel.content1 = new int[gameLevel.width][gameLevel.height];
+        gameLevel.content2 = new int[gameLevel.width][gameLevel.height];
+        gameLevel.values = new int[gameLevel.width][gameLevel.height][6];
+        //setValues(tileWidth, tileHeight, 0, 0, false);
+        for (y = 0; y < gameLevel.height; ++y) {
+            for (x = 0; x < gameLevel.width; ++x) {
+                gameLevel.content0[x][y] = -1;
+            }
+        }
+        for (y = 0; y < gameLevel.height; ++y) {
+            for (x = 0; x < gameLevel.width; ++x) {
+                gameLevel.content1[x][y] = -1;
+            }
+        }
+        for (y = 0; y < gameLevel.height; ++y) {
+            for (x = 0; x < gameLevel.width; ++x) {
+                gameLevel.content2[x][y] = -1;
+            }
+        }
+        for (y = 0; y < gameLevel.height; ++y) {
+            for (x = 0; x < gameLevel.width; ++x) {
+                gameLevel.values[x][y][0] = -1;
+                gameLevel.values[x][y][1] = 0;
+                gameLevel.values[x][y][2] = 0;
+                gameLevel.values[x][y][3] = 0;
+                gameLevel.values[x][y][4] = 0;
+                gameLevel.values[x][y][5] = 0;
+            }
+        }
+
+        gridSizeChanged();
+        invalidateAll();
+        repaint();
+        ((LevelEditorFrame)(parentFrame)).updateFieldsAfterLoad();
+        gameLevel.save(gameLevel.fileName);
     }
 
     public void mouseReleased(MouseEvent e) {
+        if (!mouseIsInGrid(e.getX(), e.getY())) {
+            int ww = (Math.max(curDotX, clickedDotX) - Math.min(curDotX, clickedDotX))/realChunkSize;
+            int hh = (Math.max(curDotY, clickedDotY) - Math.min(curDotY, clickedDotY))/realChunkSize;
+            if (gameLevel.coordX != -1) {
+                //gameLevel.save(gameLevel.fileName);
+                reloadLevel(gameLevel.fileName);
+            } else if (ww != 0 && hh != 0 && clickedDotX != 0 && clickedDotY != 0) {
+                int w = (int)(realChunkSize * gameLevel.worldWidth);
+                int h = (int)(realChunkSize * gameLevel.worldWidth);
+                int x = getWidth()/2 - w/2 + worldEditorPanelOffsetX;
+                int y = grid.getLineY(0) + worldEditorPanelOffsetY;
+                int xx = (Math.min(curDotX, clickedDotX) - x)/realChunkSize;
+                int yy =(y - Math.max(curDotY, clickedDotY))/realChunkSize;
+                boolean intersects = false;
+                Rectangle rect1 = new Rectangle(xx + 1, yy + 1, ww - 1, hh - 1);
+                for (int  i = 0; i < gameLevel.roomsCoords.size(); ++i) {
+                    if (gameLevel.roomsCoords.get(i).get(2) == currentZLayer) {
+                        Rectangle rect2 = new Rectangle(gameLevel.roomsCoords.get(i).get(0) + 1, gameLevel.roomsCoords.get(i).get(1) + 1, gameLevel.roomsWalls.get(i).get(0).size() - 1, gameLevel.roomsWalls.get(i).size() - 1);
+                        if (rect1.intersects(rect2) || rect1.contains(rect2)) {
+                            intersects = true;
+                            break;
+                        }
+                    }
+                }
+                if (!intersects) {
+                    addRoom(xx, yy, ww, hh);
+                }
+                repaint();
+            }
+        }
+        clickedDotX = 0;
+        clickedDotY = 0;
     }
 
     public void mouseEntered(MouseEvent e) {
@@ -592,7 +847,27 @@ public class EditorLevelPanel extends JPanel
     }
 
     public void mouseDragged(MouseEvent e) {
-        mouseEvent(e);
+        lastMovedMouseX = e.getX();
+        lastMovedMouseY = e.getY();
+        if (mouseIsInGrid(e.getX(), e.getY()) && !lastClickInGrid) {
+            mouseEvent(e);
+        } else {
+            if (mouseIsInEditorGrid(e.getX(), e.getY())) {
+                int w = (int)(realChunkSize * gameLevel.worldWidth);
+                int x = getWidth()/2 - w/2 + worldEditorPanelOffsetX;
+                int y = grid.getLineY(0) + worldEditorPanelOffsetY;
+                int mx = e.getX() + realChunkSize/4;
+                int my = e.getY() - realChunkSize/4;
+                curDotX = mx - (mx - x) + ((mx - x) - ((mx - x) % realChunkSize));
+                curDotY = my - (my - y) + ((my - y) - ((my - y) % realChunkSize));
+            } else if (clickedDotX == 0 && clickedDotY == 0 && lastClickInGrid) {
+                worldEditorPanelOffsetX += e.getX() - lastMouseX;
+                worldEditorPanelOffsetY += e.getY() - lastMouseY;
+                lastMouseX = e.getX();
+                lastMouseY = e.getY();
+            }
+            repaint();
+        }
     }
 
     private void mouseEvent(MouseEvent e) {
@@ -625,10 +900,26 @@ public class EditorLevelPanel extends JPanel
         }
     }
 
+    int curDotX = 0;
+    int curDotY = 0;
+    int curDotDist = 100;
+
     public void mouseMoved(MouseEvent e) {
         curCell = grid.getCell(e.getX(), e.getY());
         selectedRow = curCell.y;
         selectedColumn = curCell.x;
+        lastMovedMouseX = e.getX();
+        lastMovedMouseY = e.getY();
+        int w = (int)(realChunkSize * gameLevel.worldWidth);
+        int x = getWidth()/2 - w/2 + worldEditorPanelOffsetX;
+        int y = grid.getLineY(0) + worldEditorPanelOffsetY;
+        if (!mouseIsInGrid(e.getX(), e.getY()) &&  mouseIsInEditorGrid(e.getX(), e.getY())) {
+            int mx = e.getX() + realChunkSize/4;
+            int my = e.getY() - realChunkSize/4;
+            curDotX = mx - (mx - x) + ((mx - x) - ((mx - x) % realChunkSize));
+            curDotY = my - (my - y) + ((my - y) - ((my - y) % realChunkSize));
+            curDotDist = (int)Math.sqrt((e.getX()-curDotX)*(e.getX()-curDotX) + (e.getY()-curDotY)*(e.getY()-curDotY));
+        }
         repaint();
     }
 
@@ -744,11 +1035,14 @@ public class EditorLevelPanel extends JPanel
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_PLUS) {
-            shiftTiles(1);
+        /*if (e.getKeyCode() == KeyEvent.VK_PLUS) {
+            //shiftTiles(1);
+            worldEditorPanelOffsetScale++;
         } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
-            shiftTiles(-1);
+            //shiftTiles(-1);
+            worldEditorPanelOffsetScale--;
         }
+        repaint();*/
     }
 
     @Override
@@ -758,7 +1052,14 @@ public class EditorLevelPanel extends JPanel
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        gameLevel.curAngle++;
-        if (gameLevel.curAngle > 3) gameLevel.curAngle = 0;
+        if (mouseIsInGrid(e.getX(), e.getY())) {
+            gameLevel.curAngle++;
+            if (gameLevel.curAngle > 3) gameLevel.curAngle = 0;
+        } else {
+            if (e.getWheelRotation() < 0)worldEditorPanelOffsetScale++;
+            else worldEditorPanelOffsetScale--;
+            if (worldEditorPanelOffsetScale < 0) worldEditorPanelOffsetScale = 0;
+            repaint();
+        }
     }
 }
