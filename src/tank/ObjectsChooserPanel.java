@@ -96,9 +96,17 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     }
 
     public Point getTileCoords(int index) {
+        int tileId = 0;
+        int iii = 0;
+        while (iii < index) {
+            if (tileTypes.get(iii) == 1) {
+                tileId++;
+            }
+            iii++;
+        }
         int tilesetWidth = tilesetTileSizes.get(tilesetIndices.indexOf(tileIndices.get(index))).x;
-        int iy = tileTileIndices.get(index-imagesCount) / tilesetWidth;
-        int ix = tileTileIndices.get(index-imagesCount) - iy * tilesetWidth;
+        int iy = tileTileIndices.get(tileId) / tilesetWidth;
+        int ix = tileTileIndices.get(tileId) - iy * tilesetWidth;
         return new Point(ix, iy);
     }
 
@@ -162,17 +170,27 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     }
 
     public void collapseTilesets() {
+        int numberAdded = 0;
         for (int i = 0; i < names.size(); ++i) {
             if (names.get(i) == null) {
+                int tileId = 0;
+                int iii = 0;
+                while (iii < i) {
+                    if (tileTypes.get(iii) == 1) {
+                        tileId++;
+                    }
+                    iii++;
+                }
                 names.remove(i);
                 namesLengths.remove(i);
-                tilesets.remove(i - imagesCount);
+                tilesets.remove(tileId);
                 tileIndices.remove(i);
                 tileTypes.remove(i);
                 i--;
                 //if (i == names.size()-1) break;
             }
         }
+        numberAdded = 0;
     }
     public void expandTilesets() {
         int numberAdded = 0;
@@ -180,11 +198,19 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         for (int i = 0; i < tilesetIndices.size(); ++i) {
             int count = tilesetTileSizes.get(i).x * tilesetTileSizes.get(i).y - 1;
             for (int j = 0; j < count; ++j) {
+                int imCount = 0;
+                int iii = 0;
+                while (iii < i){
+                    if (tileTypes.get(iii) != 1) {
+                        imCount++;
+                    }
+                    iii++;
+                }
                 preSets.add(tilesetIndices.get(i)+1+numberAdded, null);
-                names.add(tilesetIndices.get(i)+imagesCount+1+numberAdded, null);
-                namesLengths.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,0);
-                tileIndices.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,tilesetIndices.get(i));
-                tileTypes.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,1);
+                names.add(tilesetIndices.get(i)+imCount+1+numberAdded, null);
+                namesLengths.add(tilesetIndices.get(i)+imCount+1+numberAdded,0);
+                tileIndices.add(tilesetIndices.get(i)+imCount+1+numberAdded,tilesetIndices.get(i));
+                tileTypes.add(tilesetIndices.get(i)+imCount+1+numberAdded,1);
                 numberAdded++;
             }
         }

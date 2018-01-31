@@ -10,7 +10,6 @@ import java.awt.*;
 
 import java.awt.event.*;
 
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class EditorLevelPanel extends JPanel
     final int CLIMBABLE_BLOCK_ID = 12;
     final int SIGN_BLOCK_ID = 13;
     final int FLOATING_PLATFORM_BLOCK_ID = 14;
-    final int IN_Z_LAYER_BLOCK_ID = 15;
+    final int OVERLAY_BLOCK = 15;
     final int OUT_Z_LAYER_BLOCK_ID = 16;
     final int PORTAL_BLOCK_ID = 17;
     final int HORIZONTAL_PLATFORM_BLOCK_ID = 18;
@@ -388,9 +387,13 @@ public class EditorLevelPanel extends JPanel
                         if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 0) {
                             width = image.getWidth(io);
                             height = image.getHeight(io);
-                        } else {
+                        } else if (!gameLevel.getObjectsChooserPanel().tilesetIndices.contains(gameLevel.getObjectsChooserPanel().tileIndices.get(imageIndex))) {
                             width = image.getWidth(io)/3;
                             height = image.getHeight(io)/4;
+                        } else {
+                            java.awt.Point size = gameLevel.getObjectsChooserPanel().tilesetTileSizes.get(gameLevel.getObjectsChooserPanel().tilesetIndices.indexOf(gameLevel.getObjectsChooserPanel().tileIndices.get(imageIndex)));
+                            width = image.getWidth(this)/size.x;
+                            height = image.getHeight(this)/size.y;
                         }
                         test1 = (float)height/(float)width;
                     }
@@ -416,18 +419,32 @@ public class EditorLevelPanel extends JPanel
                             }
                         } else if (gameLevel.getObjectsChooserPanel().tileTypes.get(imageIndex) == 1) {
                             imageTrueHeight = (int)(cell.width() * test1);
-                            boolean left = (i == 0 || ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
-                            boolean right = (i == getLevelWidth()-1 || ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
-                            boolean up = (t == 0 || ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.values[i][t-1][0] == imageIndex && n == 3)));
-                            boolean down = (t == getLevelHeight()-1 || ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.values[i][t+1][0] == imageIndex && n == 3)));
-                            int tileX = getRightTile(left, right, up, down).x;
-                            int tileY = getRightTile(left, right, up, down).y;
-                            if (getTileInverted(left, right, up, down)) {
-                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
-                                        width*tileX+width, height*tileY, width*tileX, height*tileY+height, this);
+                            if (gameLevel.getObjectsChooserPanel().tilesetIndices.contains(gameLevel.getObjectsChooserPanel().tileIndices.get(imageIndex))) {
+                                java.awt.Point coords = gameLevel.getObjectsChooserPanel().getTileCoords(imageIndex);
+                                java.awt.Point size = gameLevel.getObjectsChooserPanel().tilesetTileSizes.get(gameLevel.getObjectsChooserPanel().tilesetIndices.indexOf(gameLevel.getObjectsChooserPanel().tileIndices.get(imageIndex)));
+                                int w = image.getWidth(this)/size.x;
+                                int h = image.getHeight(this)/size.y;
+                                if (n == 0) {
+                                    g.drawImage(image, cell.left, cell.top, cell.left+cell.width(), cell.bottom + (h - gameLevel.tileHeight)*(cell.width()/gameLevel.tileWidth),
+                                            w*coords.x, h*coords.y, w*coords.x+w, h*coords.y+h, this);
+                                } else {
+                                    g.drawImage(image, cell.left, cell.top-(h - gameLevel.tileHeight)*(cell.width()/gameLevel.tileWidth), cell.left+cell.width(), cell.bottom,
+                                            w*coords.x, h*coords.y, w*coords.x+w, h*coords.y+h, this);
+                                }
                             } else {
-                                g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
-                                        width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
+                                boolean left = (i == 0 || ((gameLevel.content2[i - 1][t] == imageIndex && n == 2) || (gameLevel.content1[i - 1][t] == imageIndex && n == 1) || (gameLevel.content0[i-1][t] == imageIndex && n == 0) || (gameLevel.values[i-1][t][0] == imageIndex && n == 3)));
+                                boolean right = (i == getLevelWidth()-1 || ((gameLevel.content2[i+1][t] == imageIndex && n == 2) || (gameLevel.content1[i+1][t] == imageIndex && n == 1) || (gameLevel.content0[i+1][t] == imageIndex && n == 0) || (gameLevel.values[i+1][t][0] == imageIndex && n == 3)));
+                                boolean up = (t == 0 || ((gameLevel.content2[i][t-1] == imageIndex && n == 2) || (gameLevel.content1[i][t-1] == imageIndex && n == 1) || (gameLevel.content0[i][t-1] == imageIndex && n == 0) || (gameLevel.values[i][t-1][0] == imageIndex && n == 3)));
+                                boolean down = (t == getLevelHeight()-1 || ((gameLevel.content2[i][t+1] == imageIndex && n == 2) || (gameLevel.content1[i][t+1] == imageIndex && n == 1) || (gameLevel.content0[i][t+1] == imageIndex && n == 0) || (gameLevel.values[i][t+1][0] == imageIndex && n == 3)));
+                                int tileX = getRightTile(left, right, up, down).x;
+                                int tileY = getRightTile(left, right, up, down).y;
+                                if (getTileInverted(left, right, up, down)) {
+                                    g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                            width*tileX+width, height*tileY, width*tileX, height*tileY+height, this);
+                                } else {
+                                    g.drawImage(image, cell.left, cell.bottom - imageTrueHeight/* + getOffset(n, imageTrueHeight)*/, cell.left+cell.width(), cell.bottom - imageTrueHeight + getOffset(n, imageTrueHeight)+imageTrueHeight,
+                                            width*tileX, height*tileY, width*tileX+width, height*tileY+height, this);
+                                }
                             }
                         } else {
                             height = image.getHeight(io);
@@ -474,7 +491,7 @@ public class EditorLevelPanel extends JPanel
             case CLIMBABLE_BLOCK_ID: return "";
             case SIGN_BLOCK_ID: return "SGN";
             case FLOATING_PLATFORM_BLOCK_ID: return "FLT";
-            case IN_Z_LAYER_BLOCK_ID: return "Z+";
+            case OVERLAY_BLOCK: return "OVR";
             case OUT_Z_LAYER_BLOCK_ID: return "Z-";
             case PORTAL_BLOCK_ID: return "PRTL";
             case HORIZONTAL_PLATFORM_BLOCK_ID: return "VPLT";
@@ -508,7 +525,7 @@ public class EditorLevelPanel extends JPanel
             case CLIMBABLE_BLOCK_ID: return new Color(1.0f, 0.5f, 0.5f, 0.2f);
             case SIGN_BLOCK_ID: return new Color(0.3f, 0.3f, 0, 0.2f);
             case FLOATING_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);
-            case IN_Z_LAYER_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
+            case OVERLAY_BLOCK: return new Color(1.0f, 0, 1.0f, 0.2f);
             case OUT_Z_LAYER_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
             case PORTAL_BLOCK_ID: return new Color(1.0f, 0, 1.0f, 0.2f);
             case HORIZONTAL_PLATFORM_BLOCK_ID: return new Color(0.5f, 0.5f, 1.0f, 0.2f);

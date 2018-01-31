@@ -112,7 +112,8 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         chooser.showOpenDialog(this);
         chooser.addKeyListener(this);
         path = chooser.getSelectedFile().getAbsolutePath();
-        objectCC = new ObjectsChooserPanel(path);
+        objectCC = new ObjectsChooserPanel();
+        //objectCC.lp = editorLP;
 
         initComponents();
         initPanels(path);
@@ -167,6 +168,12 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         }
     }
 
+    public void initOCP(String path) {
+        objectCC.init(path, editorLP);
+        editorLP.gameLevel.setObjectsChooserPanel(objectCC);
+        editorLP.setObjectsChooserPanel(objectCC);
+    }
+
     private void initPanels(String path) {
         ObjectListScrollPane.setViewportView(objectCC);
         //ObjectListScrollPane2.setViewportView(attributesOCC);
@@ -184,12 +191,11 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
         setFocusable(true);
         this.addKeyListener(this);
 
-        editorLP.setObjectsChooserPanel(objectCC);
         editorLP.setAttributesChooserPanel(attributesOCC);
         editorLP.addMouseWheelListener(editorLP);
         editorLP.setFocusable(true);
         editorLP.addKeyListener(this);
-
+        editorLP.gameLevel.frame = this;
         File f = new File(path + "\\world1.tlw");
         if(f.exists()) {
             editorLP.gameLevel.load(path + "\\world1.tlw", true, true);
@@ -203,6 +209,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
             try {
                 f.createNewFile();
                 editorLP.gameLevel.fileName = path + "\\world1.tlw";
+                initOCP(path);
             } catch (IOException e) {
                 e.printStackTrace();
             }
