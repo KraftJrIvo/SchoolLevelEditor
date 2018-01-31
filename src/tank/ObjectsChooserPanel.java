@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.awt.image.ImageProducer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -23,6 +24,8 @@ import java.util.Enumeration;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -47,6 +50,9 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     ArrayList<Rect> imagesRect;
     ArrayList<Integer> tileTypes;
     ArrayList<Integer> tileIndices;
+    ArrayList<Integer> tileTileIndices;
+    ArrayList<Integer> tilesetIndices;
+    ArrayList<Point> tilesetTileSizes;
     //private Rect[] imagesRect = new Rect[10];
     private int selectedImage = 2;
     private Grid grid = new Grid(false);
@@ -55,6 +61,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     String currentDir = "default";
     boolean loaded = false;
     int imagesCount = 0, tilesetsCount = 0, animationsCount = 0;
+    public EditorLevelPanel lp;
 
     public interface ChooserListener {
         void onChoose(int i);
@@ -68,6 +75,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     public void setBounds(int x, int y, int width, int height) {
         super.setBounds(x, y, width, height);
         grid.setSize(imgColumnsCount, imgLinesCount, getWidth(), getHeight());
+        imagesRect.clear();
         calculateImagesRect();
     }
 
@@ -83,8 +91,15 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     public Image getImage(int index) {
         if (tileTypes.get(index) < 0) return null;
         if (tileTypes.get(index) == 2) return animations.get(tileIndices.get(index));
-        if (tileTypes.get(index) == 1) return tilesets.get(tileIndices.get(index));
+        if (tileTypes.get(index) == 1) return getRealTileSet(tileIndices.get(index));
         return images.get(tileIndices.get(index));
+    }
+
+    public Point getTileCoords(int index) {
+        int tilesetWidth = tilesetTileSizes.get(tilesetIndices.indexOf(tileIndices.get(index))).x;
+        int iy = tileTileIndices.get(index-imagesCount) / tilesetWidth;
+        int ix = tileTileIndices.get(index-imagesCount) - iy * tilesetWidth;
+        return new Point(ix, iy);
     }
 
     public Image getCurrentImage() {
@@ -142,70 +157,42 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         }
     }
 
-    /*public void reload(String newDir) {
-        loaded = false;
-        currentDir = newDir;
-        imgColumnsCount = 4;
-        imgLinesCount = 3;
-        images = new ArrayList<Image>();
-        tilesets = new ArrayList<Image>();
-        imagesRect = new ArrayList<Rect>();
-        names = new ArrayList<String>();
-        newNames = new ArrayList<String>();
-        namesLengths = new ArrayList<Integer>();
-        URLClassLoader urlLoader =
-                (URLClassLoader)getClass().getClassLoader();
-        int urlID = 0;
-        for (int i=0; i<urlLoader.getURLs().length; ++i) {
-            if (urlLoader.getURLs()[i].toString().contains("images\\"+currentDir)) {
-                urlID = i;
-                break;
-            }
-        }
-        File dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir);
-        File[] directoryListing = dir.listFiles();
-        if (directoryListing != null) {
-            for (File child : directoryListing) {
-                Image image = getImage(this, child.getPath());
-                if (image != null) {
-                    images.add(image);
-                    names.add(child.getName().substring(0, child.getName().length() - 4));
-                    namesLengths.add(child.getName().length());
-                }
-            }
-            dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\tiles");
-            directoryListing = dir.listFiles();;
-            for (File child : directoryListing) {
-                Image image = getImage(this, child.getPath());
-                if (image != null) {
-                    tilesets.add(image);
-                    names.add(child.getName().substring(0, child.getName().length() - 4));
-                    namesLengths.add(child.getName().length());
-                }
-            }
-            dir = new File(urlLoader.getURLs()[urlID].getPath()+"\\images\\"+currentDir+"\\anim");
-            directoryListing = dir.listFiles();;
-            for (File child : directoryListing) {
-                Image image = getImage(this, child.getPath());
-                if (image != null) {
-                    animations.add(image);
-                    names.add(child.getName().substring(0, child.getName().length() - 4));
-                    namesLengths.add(child.getName().length());
-                }
-            }
-        }
-        imagesCount = images.size();
-        tilesetsCount = tilesets.size();
-        //calculateImagesRect();
-        grid.setSize(imgColumnsCount, imgLinesCount, getWidth(), getHeight());
-        addMouseListener((MouseListener)this);
-        addMouseMotionListener((MouseMotionListener) this);
-        loaded = true;
-        calculateImagesRect();
-    }*/
+    public ObjectsChooserPanel() {
 
-    public ObjectsChooserPanel(String str) {
-        imgColumnsCount = 4;
+    }
+
+    public void collapseTilesets() {
+        for (int i = 0; i < names.size(); ++i) {
+            if (names.get(i) == null) {
+                names.remove(i);
+                namesLengths.remove(i);
+                tilesets.remove(i - imagesCount);
+                tileIndices.remove(i);
+                tileTypes.remove(i);
+                i--;
+                //if (i == names.size()-1) break;
+            }
+        }
+    }
+    public void expandTilesets() {
+        int numberAdded = 0;
+        ArrayList<Image> preSets = (ArrayList<Image>) tilesets.clone();
+        for (int i = 0; i < tilesetIndices.size(); ++i) {
+            int count = tilesetTileSizes.get(i).x * tilesetTileSizes.get(i).y - 1;
+            for (int j = 0; j < count; ++j) {
+                preSets.add(tilesetIndices.get(i)+1+numberAdded, null);
+                names.add(tilesetIndices.get(i)+imagesCount+1+numberAdded, null);
+                namesLengths.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,0);
+                tileIndices.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,tilesetIndices.get(i));
+                tileTypes.add(tilesetIndices.get(i)+imagesCount+1+numberAdded,1);
+                numberAdded++;
+            }
+        }
+        tilesets = preSets;
+    }
+
+    public void init(String str, EditorLevelPanel lp) {
+        imgColumnsCount = 8;
         imgLinesCount = 20;
         images = new ArrayList<Image>();
         tilesets = new ArrayList<Image>();
@@ -216,9 +203,18 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         newNames = new ArrayList<String>();
         tileTypes = new ArrayList<Integer>();
         tileIndices = new ArrayList<Integer>();
-
+        tileTileIndices = new ArrayList<Integer>();
+        tilesetIndices = new ArrayList<Integer>();
+        tilesetTileSizes = new ArrayList<Point>();
+        this.lp = lp;
         //reload(str);
         //chooser.setCurrentDirectory();
+        ImageObserver io = new ImageObserver() {
+            @Override
+            public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
+                return false;
+            }
+        };
         File dir = new File(str);
         File[] directoryListing = dir.listFiles();
         if (directoryListing != null) {
@@ -234,14 +230,53 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             }
             dir = new File(str+"\\tiles");
             directoryListing = dir.listFiles();
+            int tilesetsCount =  0;
             for (File child : directoryListing) {
                 Image image = getImage(this, child.getPath());
                 if (image != null) {
-                    tileIndices.add(tilesets.size());
-                    tilesets.add(image);
-                    names.add("tiles\\" + child.getName().substring(0, child.getName().length() - 4));
-                    namesLengths.add(child.getName().length());
-                    tileTypes.add(1);
+                    if (!child.getName().contains("tileset")) {
+                        tileIndices.add(tilesetsCount);
+                        tilesets.add(image);
+                        names.add("tiles\\" + child.getName().substring(0, child.getName().length() - 4));
+                        namesLengths.add(child.getName().length());
+                        tileTypes.add(1);
+                        tileTileIndices.add(0);
+                    } else {
+                        tilesetIndices.add(tilesetsCount);
+                        Pattern p = Pattern.compile("(\\d+)x(\\d+)",
+                                Pattern.CASE_INSENSITIVE);
+                        Matcher m = p.matcher(child.getName());
+                        int hhh = image.getHeight(io)/lp.gameLevel.tileHeight;
+                        int www = image.getWidth(io)/lp.gameLevel.tileWidth;
+                        if (m.find()) {
+                            www = Integer.parseInt(m.group(1));
+                            hhh = Integer.parseInt(m.group(2));
+                            tilesetTileSizes.add(new Point(www, hhh));
+                        } else {
+                            www = 3;
+                            hhh = 4;
+                            tilesetTileSizes.add(new Point(3, 4));
+                        }
+                        int ind = tilesets.size();
+                        for (int i = 0; i < hhh; ++i) {
+                            for (int j = 0; j < www; ++j) {
+                                tileIndices.add(tilesetsCount);
+                                if (i == 0 && j == 0) {
+                                    tilesets.add(image);
+                                    names.add("tiles\\" + child.getName().substring(0, child.getName().length() - 4));
+                                    namesLengths.add(child.getName().length());
+                                }
+                                else {
+                                    tilesets.add(null);
+                                    names.add(null);
+                                    namesLengths.add(0);
+                                }
+                                tileTypes.add(1);
+                                tileTileIndices.add(i * www + j);
+                            }
+                        }
+                    }
+                    tilesetsCount++;
                 }
             }
             dir = new File(str+"\\anim");
@@ -262,6 +297,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
         imagesCount = images.size();
         tilesetsCount = tilesets.size();
         animationsCount = animations.size();
+        imgLinesCount = tileIndices.size()/imgColumnsCount + 2;
         calculateImagesRect();
         grid.setSize(imgColumnsCount, imgLinesCount, getWidth(), getHeight());
         addMouseListener((MouseListener)this);
@@ -270,6 +306,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     }
 
     public void updateTiles() {
+        collapseTilesets();
         ArrayList<String> preNames = new ArrayList<String>(names);
         ArrayList<Integer> preTileIndices = new ArrayList<Integer>(tileIndices);
         ArrayList<Integer> preTileTypes = new ArrayList<Integer>(tileTypes);
@@ -300,24 +337,10 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             preTileIndices.set(newNames.size() + i, unusedIndices.get(i));
             preNames.set(newNames.size() + i, unusedNames.get(i));
         }
-        /*ArrayList<String> preNames = new ArrayList<String>(names);
-        for (int i = 0; i < newNames.size(); ++i) {
-            int id = names.indexOf(newNames.get(i));
-            if (id >= 0 && id != i) {
-                int type = tileTypes.get(i);
-                int idx = tileIndices.get(i);
-                String name = preNames.get(i);
-                tileTypes.set(i, tileTypes.get(id));
-                tileIndices.set(i, tileIndices.get(id));
-                preNames.set(i, preNames.get(id));
-                tileTypes.set(id, type);
-                tileIndices.set(id, idx);
-                preNames.set(id, name);
-            }
-        }*/
         tileIndices = preTileIndices;
         tileTypes = preTileTypes;
         names = preNames;
+        expandTilesets();
     }
 
     private Rect getImageRect(int index) {
@@ -343,9 +366,20 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
        }
     }
 
+    public Image getRealTileSet(int ii) {
+        int tilesCount = 0;
+        for (int i = 0; i < tilesets.size(); ++i) {
+            if (tilesets.get(i) != null) {
+                if (tilesCount == ii) return tilesets.get(i);
+                tilesCount++;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void paint(Graphics g) {
-       if (imagesRect == null || imagesRect.size()==0 || images.get(0) == null) return;
+       if (imagesRect == null || imagesRect.size()==0 || images.size()==0 || images.get(0) == null) return;
        if (grid.isNull()) return;
        g.setColor(Color.white);
        g.fillRect(0, 0, getWidth(), getHeight());
@@ -360,9 +394,35 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
             if (tileTypes.get(i) == 0) {
                 g.drawImage(images.get(tileIndices.get(i)), imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).width(), imagesRect.get(i).height(), this);
             } else if (tileTypes.get(i) == 1) {
-                int width = tilesets.get(tileIndices.get(i)).getWidth(this)/3;
-                int height = tilesets.get(tileIndices.get(i)).getHeight(this)/4;
-                g.drawImage(tilesets.get(tileIndices.get(i)), imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom, 0, 0, width, height, this);
+                int width;
+                int height;
+                if (!tilesetIndices.contains(tileIndices.get(i))) {
+                    Image tileset = getRealTileSet(tileIndices.get(i));
+                    width = tileset.getWidth(this)/3;
+                    height = tileset.getHeight(this)/4;
+                    g.drawImage(tileset, imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom, 0, 0, width, height, this);
+                } else {
+                    int startIndex = -1;
+                    int startFirst = -1;
+                    for (int ii =0; ii < tileIndices.size(); ++ii) {
+                        if (startFirst != -1 && tileIndices.get(ii).equals(tileIndices.get(i))) {
+                            if (ii == startFirst+1)startIndex = startFirst;
+                            else startIndex = ii;
+                            break;
+                        } else if (startFirst == -1 && tileIndices.get(ii).equals(tileIndices.get(i))) {
+                            startFirst = ii;
+                        }
+                    }
+                    if (startIndex == -1) startIndex = startFirst;
+                    int tilesetWidth = (getRealTileSet(tileIndices.get(i)).getWidth(this)/lp.gameLevel.tileWidth);
+                    int iy = (i-startIndex) / tilesetWidth;
+                    int ix = (i-startIndex) - iy * tilesetWidth;
+                    Image img = getRealTileSet(tileIndices.get(i));
+                    int w = img.getWidth(this)/tilesetTileSizes.get(tilesetIndices.indexOf(tileIndices.get(i))).x;
+                    int h = img.getHeight(this)/tilesetTileSizes.get(tilesetIndices.indexOf(tileIndices.get(i))).y;
+                    g.drawImage(img, imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom,
+                            ix*w, h*iy, w*ix + w, h*iy + h, this);
+                }
             } else if (tileTypes.get(i) == 2) {
                 int width = animations.get(tileIndices.get(i)).getHeight(this);
                 int height = width;
@@ -375,35 +435,6 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                 g.setColor(Color.black);
             g.drawRect(imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).width(), imagesRect.get(i).height());
         }
-       /*for (int imageID = 0; imageID< imagesCount +tilesetsCount+animationsCount; ++imageID) {
-            if (imageID == selectedImage)
-               g.setColor(Color.white);
-            else
-               g.setColor(Color.GRAY);
-            g.fillRect(imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).width(), imagesRect.get(imageID).height());
-            if (imageID < imagesCount) {
-                g.drawImage(images.get(imageID), imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).width(), imagesRect.get(imageID).height(), this);
-            } else if (imageID < tilesetsCount+imagesCount) {
-                //hhh//images.get(imageID)
-                //g.drawImage()
-                int width = tilesets.get(imageID- imagesCount).getWidth(this)/3;
-                int height = tilesets.get(imageID- imagesCount).getHeight(this)/4;
-                //boolean left =
-                g.drawImage(tilesets.get(imageID- imagesCount), imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).right, imagesRect.get(imageID).bottom,
-                        0, 0, width, height, this);
-            } else {
-                int width = animations.get(imageID - imagesCount - tilesetsCount).getHeight(this);
-                int height = width;
-                //boolean left =
-                g.drawImage(animations.get(imageID- imagesCount - tilesetsCount), imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).right, imagesRect.get(imageID).bottom,
-                        0, 0, width, height, this);
-            }
-            if (imageID == selectedImage)
-                g.setColor(Color.red);
-            else
-                g.setColor(Color.black);
-            g.drawRect(imagesRect.get(imageID).left, imagesRect.get(imageID).top, imagesRect.get(imageID).width(), imagesRect.get(imageID).height());
-       }*/
     }
 
 
