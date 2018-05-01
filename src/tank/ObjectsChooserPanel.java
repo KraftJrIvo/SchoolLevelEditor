@@ -218,7 +218,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
     }
 
     public void init(String str, EditorLevelPanel lp) {
-        imgColumnsCount = 8;
+        imgColumnsCount = 24;
         imgLinesCount = 20;
         images = new ArrayList<Image>();
         tilesets = new ArrayList<Image>();
@@ -405,7 +405,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
 
     @Override
     public void paint(Graphics g) {
-       if (imagesRect == null || imagesRect.size()==0 || images.size()==0 || images.get(0) == null) return;
+       if (imagesRect == null || imagesRect.size()==0) return;
        if (grid.isNull()) return;
        g.setColor(Color.white);
        g.fillRect(0, 0, getWidth(), getHeight());
@@ -428,7 +428,7 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                     height = tileset.getHeight(this)/4;
                     g.drawImage(tileset, imagesRect.get(i).left, imagesRect.get(i).top, imagesRect.get(i).right, imagesRect.get(i).bottom, 0, 0, width, height, this);
                 } else {
-                    int startIndex = -1;
+                    /*int startIndex = -1;
                     int startFirst = -1;
                     for (int ii =0; ii < tileIndices.size(); ++ii) {
                         if (startFirst != -1 && tileIndices.get(ii).equals(tileIndices.get(i))) {
@@ -438,8 +438,15 @@ public class ObjectsChooserPanel extends JPanel implements MouseListener, MouseM
                         } else if (startFirst == -1 && tileIndices.get(ii).equals(tileIndices.get(i))) {
                             startFirst = ii;
                         }
+                    }*/
+                    int startIndex = -1;
+                    for (int ii =0; ii < tileIndices.size(); ++ii) {
+                        if (tileIndices.get(ii).equals(tileIndices.get(i)) && tileTypes.get(ii) == 1) {
+                            startIndex = ii;
+                            break;
+                        }
                     }
-                    if (startIndex == -1) startIndex = startFirst;
+                    //if (startIndex == -1) startIndex = startFirst;
                     int tilesetWidth = (getRealTileSet(tileIndices.get(i)).getWidth(this)/lp.gameLevel.tileWidth);
                     int iy = (i-startIndex) / tilesetWidth;
                     int ix = (i-startIndex) - iy * tilesetWidth;

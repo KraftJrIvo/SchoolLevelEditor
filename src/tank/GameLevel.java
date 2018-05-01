@@ -1019,7 +1019,16 @@ public class GameLevel {
                 break;
             }
         } while (read < length);
-
+        for (int i = 0; i < roomsNames.size(); ++i) {
+            for (int j = i + 1; j < roomsNames.size(); ++j) {
+                if (roomsNames.get(i).equals(roomsNames.get(j)) || (roomsCoords.get(i).get(0).equals(roomsCoords.get(j).get(0)) && roomsCoords.get(i).get(1).equals(roomsCoords.get(j).get(1)) && roomsCoords.get(i).get(2).equals(roomsCoords.get(j).get(2)))) {
+                    roomsNames.remove(roomsNames.get(j));
+                    roomsCoords.remove(roomsCoords.get(j));
+                    roomsAmbientNames.remove(roomsAmbientNames.get(j));
+                    roomsWalls.remove(roomsWalls.get(j));
+                }
+            }
+        }
         return true;
     }
 

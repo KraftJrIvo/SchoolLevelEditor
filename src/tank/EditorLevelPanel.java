@@ -475,6 +475,9 @@ public class EditorLevelPanel extends JPanel
     final int VERTICAL_PLATFORM_BLOCK_ID = 20;*/
 
     private String getTileString(int i, int angle) {
+        if (angle >= 100) {
+            return getTileString(i, 0) + (i - 100);
+        }
         switch (i) {
             case SPAWN_POINT_BLOCK_ID: return "!S!";
             case FLOOR_BLOCK_ID: return "";
@@ -501,9 +504,11 @@ public class EditorLevelPanel extends JPanel
         }
         if (i >= 200) {
             if (angle == 0) {
-                return "ch" + (i - 200);
+                return "chr" + (i - 200);
             }
-            return "it" + (i - 200);
+            if (angle == 2) {
+                return "itm" + (i - 200);
+            }
         }
         return "";
     }

@@ -514,7 +514,7 @@ public class LevelEditorFrame extends javax.swing.JFrame implements KeyListener 
                                 .addGap(46, 46, 46)
                                 .addComponent(ApplyLevelPropertiesButton)
 
-                                .addContainerGap(52, Short.MAX_VALUE))
+                                .addContainerGap(452, Short.MAX_VALUE))
         );
         LevelPropertiesPanelLayout.setVerticalGroup(
                 LevelPropertiesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
